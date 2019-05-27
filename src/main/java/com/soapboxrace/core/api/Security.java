@@ -31,8 +31,8 @@ public class Security {
 	@Secured
 	@Path("/generateWebToken")
 	@Produces(MediaType.APPLICATION_XML)
-	public String generateWebToken() {
-		return "<token></token>";
+	public String generateWebToken(@HeaderParam("securityToken") String securityToken) {
+		return "<token>" + securityToken + "</token><success code=\"SUCCESS\"/>";
 	}
 
 }

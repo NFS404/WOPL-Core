@@ -67,6 +67,7 @@ public class DriverPersonaBO {
 		personaEntity.setUser(userEntity);
 		personaEntity.setCash(parameterBO.getIntParam("STARTING_CASH_AMOUNT"));
 		personaEntity.setLevel(parameterBO.getIntParam("STARTING_LEVEL_NUMBER"));
+		personaEntity.setBoost(Integer.valueOf(0));
 		personaEntity.setCreated(LocalDateTime.now());
 		personaDao.insert(personaEntity);
 

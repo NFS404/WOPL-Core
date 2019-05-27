@@ -138,103 +138,45 @@ public class TokenSessionBO {
 		if (!loginStatusVO.isLoginOk()) {
 			return loginStatusVO;
 		}
+
 		loginStatusVO = new LoginStatusVO(0L, "", false);
 
 		if (email != null && !email.isEmpty() && password != null && !password.isEmpty()) {
 			UserEntity userEntity = userDAO.findByEmail(email);
-			if (userEntity != null) {
-				if (password.equals(userEntity.getPassword())) {
-					BanEntity banEntity = authenticationBO.checkUserBan(userEntity);
 
-					if (banEntity != null) {
-						LoginStatusVO.Ban ban = new LoginStatusVO.Ban();
-						ban.setReason(banEntity.getReason());
-						if (banEntity.getEndsAt() != null)
-							ban.setExpires(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL).withZone(ZoneId.systemDefault()).format(banEntity.getEndsAt()));
-						loginStatusVO.setBan(ban);
+			if (userEntity != null) {
+				if(userEntity.isAdmin() || parameterBO.getBoolParam("IS_MAINTEANCE") == false) {
+					if (password.equals(userEntity.getPassword())) {
+						BanEntity banEntity = authenticationBO.checkUserBan(userEntity);
+
+						if (banEntity != null) {
+							LoginStatusVO.Ban ban = new LoginStatusVO.Ban();
+							ban.setReason(banEntity.getReason());
+							if (banEntity.getEndsAt() != null)
+								ban.setExpires(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL).withZone(ZoneId.systemDefault()).format(banEntity.getEndsAt()));
+							loginStatusVO.setBan(ban);
+							return loginStatusVO;
+						}
+
+						userEntity.setLastLogin(LocalDateTime.now());
+						userDAO.update(userEntity);
+						Long userId = userEntity.getId();
+						deleteByUserId(userId);
+						String randomUUID = createToken(userId, null);
+						loginStatusVO = new LoginStatusVO(userId, randomUUID, true);
+						loginStatusVO.setDescription("");
+
 						return loginStatusVO;
 					}
-
-					userEntity.setLastLogin(LocalDateTime.now());
-					userDAO.update(userEntity);
-					Long userId = userEntity.getId();
-					deleteByUserId(userId);
-					String randomUUID = createToken(userId, null);
-					loginStatusVO = new LoginStatusVO(userId, randomUUID, true);
-					loginStatusVO.setDescription("");
-
-					int breachCount = PwnedPasswords.checkHash(password);
-					if (breachCount > 0) {
-						loginStatusVO.setWarning("Your password has been breached " + breachCount + " times and should never be used.\nPlease choose new password using the password reset functionality.");
-					}
-
-					return loginStatusVO;
+				} else {
+					loginStatusVO.setDescription("Server is in mainteance. Please follow our discord for more info.");
+         			return loginStatusVO;
 				}
 			}
 		}
+
 		loginStatusVO.setDescription("LOGIN ERROR");
 		return loginStatusVO;
-	}
-
-	public ModernAuthResponse modernLogin(String email, String password, boolean upgrade) throws AuthException {
-		if (parameterBO.getBoolParam("MODERN_AUTH_DISABLE")) {
-			throw new AuthException("Modern Auth not enabled!");
-		}
-
-		UserEntity userEntity = userDAO.findByEmail(email);
-		if (userEntity == null) {
-			throw new AuthException("Invalid username or password");
-		}
-		if (userEntity.getPassword().length() == 40) {
-			@SuppressWarnings("deprecation")
-			String legacyHash = Hashing.sha1().hashString(password, StandardCharsets.UTF_8).toString();
-			if (!legacyHash.equals(userEntity.getPassword())) {
-				throw new AuthException("Invalid username or password");
-			}
-
-            if (upgrade) {
-                String hash = argon2.hash(password);
-                userEntity.setPassword(hash);
-            }
-		} else {
-			if (!argon2.verify(userEntity.getPassword(), password)) {
-				throw new AuthException("Invalid username or password");
-			}
-		}
-
-        BanEntity banEntity = authenticationBO.checkUserBan(userEntity);
-
-        if (banEntity != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Your account has been banned");
-            if (banEntity.getEndsAt() != null) {
-                sb.append(" until ");
-                sb.append(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL).withZone(ZoneId.systemDefault()).format(banEntity.getEndsAt()));
-            }
-            if (banEntity.getReason() != null) {
-                sb.append('\n');
-                sb.append("Reason: ");
-                sb.append(banEntity.getReason());
-            }
-            throw new AuthException(sb.toString());
-        }
-
-		userEntity.setLastLogin(LocalDateTime.now());
-		userDAO.update(userEntity);
-
-		ModernAuthResponse response = new ModernAuthResponse();
-		Long userId = userEntity.getId();
-		deleteByUserId(userId);
-		String randomUUID = createToken(userId, null);
-		response.setUserId(userId);
-		response.setToken(randomUUID);
-
-		int breachCount = PwnedPasswords.checkPassword(password);
-		if (breachCount > 0) {
-			response.setWarning("Your password has been breached " + breachCount + " times and should never be used.\nPlease choose new password using the password reset functionality.");
-		}
-
-		return response;
 	}
 
 	public Long getActivePersonaId(String securityToken) {

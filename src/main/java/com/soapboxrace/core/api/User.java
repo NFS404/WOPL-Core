@@ -237,34 +237,4 @@ public class User
 		}
 		return Response.serverError().entity(loginStatusVO).build();
 	}
-
-	@POST
-	@Path("modernRegister")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	@LauncherChecks
-	public Response modernRegister(ModernRegisterRequest req)
-	{
-		try {
-			userBO.createModernUser(req.getEmail(), req.getPassword(), req.getTicket());
-		} catch (AuthException e) {
-			return Response.status(Response.Status.BAD_REQUEST).entity(new JSONError(e.getMessage())).build();
-		}
-		return Response.ok(new ModernRegisterResponse("Account created!")).build();
-	}
-
-	@POST
-	@Path("modernAuth")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	@LauncherChecks
-	public Response modernAuth(ModernAuthRequest req)
-	{
-		try {
-			ModernAuthResponse resp = tokenBO.modernLogin(req.getEmail(), req.getPassword(), req.getUpgrade());
-			return Response.ok(resp).build();
-		} catch (AuthException e) {
-			return Response.status(Response.Status.BAD_REQUEST).entity(new JSONError(e.getMessage())).build();
-		}
-	}
 }

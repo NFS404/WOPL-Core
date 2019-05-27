@@ -31,8 +31,8 @@ public class SystemInfo {
 		systemInfo.setNucleusNamespace("sbrw-live");
 		systemInfo.setNucleusNamespaceWeb("sbr_web");
 		systemInfo.setPersonaCacheTimeout(900);
-		systemInfo.setPortalDomain("nightriderz.world");
-		systemInfo.setPortalStoreFailurePage("nightriderz.world/fail");
+		systemInfo.setPortalDomain("nfswonline.pl");
+		systemInfo.setPortalStoreFailurePage("nfswonline.pl/fail");
 		systemInfo.setPortalTimeOut("6000");
 		systemInfo.setShardName("CORE");
 		GregorianCalendar c = new GregorianCalendar();
@@ -42,7 +42,7 @@ public class SystemInfo {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		systemInfo.setVersion("1599");
+		systemInfo.setVersion("2137");
 		return systemInfo;
 	}
 }

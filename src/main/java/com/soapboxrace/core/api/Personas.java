@@ -80,6 +80,8 @@ public class Personas {
 
 		System.out.println(commerceXml.toString());
 
+		PersonaEntity personaEntity = personaBO.getPersonaById(personaId);
+
 		CommerceSessionTrans commerceSessionTrans = UnmarshalXML.unMarshal(commerceXml, CommerceSessionTrans.class);
 		List<BasketItemTrans> basketItemTrans = commerceSessionTrans.getBasket().getItems().getBasketItemTrans();
 		CarSlotEntity defaultCarEntity = personaBO.getDefaultCarEntity(personaId);
@@ -104,7 +106,7 @@ public class Personas {
 		arrayOfWalletTrans.getWalletTrans().add(cashWallet);
 		arrayOfWalletTrans.getWalletTrans().add(boostWallet);
 
-		commerceResultTrans.setWallets(arrayOfWalletTrans);
+		commerceSessionResultTrans.setWallets(arrayOfWalletTrans);
 		commerceSessionResultTrans.setInventoryItems(arrayOfInventoryItemTrans);
 		commerceSessionResultTrans.setStatus(CommerceResultStatus.SUCCESS);
 		commerceSessionResultTrans.setUpdatedCar(OwnedCarConverter.entity2Trans(defaultCarEntity.getOwnedCar()));
