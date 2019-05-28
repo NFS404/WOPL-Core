@@ -65,9 +65,11 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
+    implementation 'com.github.MrPowerGamerBR:TemmieWebhook:master-SNAPSHOT'
     compileOnly group: 'org.jboss.spec.javax.servlet', name: 'jboss-servlet-api_3.1_spec', version: '1.0.0.Final'
     compileOnly group: 'javax', name: 'javaee-api', version: '7.0'
     compile group: 'org.igniterealtime', name: 'rest-api-client', version: '1.1.3'

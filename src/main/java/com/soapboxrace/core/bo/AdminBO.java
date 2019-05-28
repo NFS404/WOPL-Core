@@ -16,6 +16,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.time.LocalDateTime;
 
+import com.mrpowergamerbr.temmiewebhook.DiscordEmbed;
+import com.mrpowergamerbr.temmiewebhook.DiscordMessage;
+import com.mrpowergamerbr.temmiewebhook.TemmieWebhook;
+import com.mrpowergamerbr.temmiewebhook.embed.ThumbnailEmbed;
+
 @Stateless
 public class AdminBO {
 	@EJB
@@ -40,6 +45,7 @@ public class AdminBO {
 	{
 		CommandInfo commandInfo = CommandInfo.parse(command);
 		PersonaEntity personaEntity = personaDao.findById(abuserPersonaId);
+		PersonaEntity personaEntity1 = personaDao.findById(personaId);
 
 		if (personaEntity == null)
 			return;
@@ -54,6 +60,14 @@ public class AdminBO {
 
 				sendBan(personaEntity, personaDao.findById(personaId), commandInfo.timeEnd, commandInfo.reason);
 				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Banned user!"), personaId);
+
+				TemmieWebhook temmie = new TemmieWebhook("https://ptb.discordapp.com/api/webhooks/582977904783130635/8TG0LZGu35JSAKFF6NqF3I7T7AGgMTEJDupLXaYAQgt6yzh9XLeXHFAfzxzIuLxLhDcK");
+				DiscordMessage dm = DiscordMessage.builder()
+						.username("WOPLBot")
+						.content("[ " + personaEntity.getName() + " ] has been banned by [" + personaEntity1.getName() + "].")
+						.build();
+						
+				temmie.sendMessage(dm);
 				break;
 			case KICK:
 				sendKick(personaEntity.getUser().getId(), personaEntity.getPersonaId());
