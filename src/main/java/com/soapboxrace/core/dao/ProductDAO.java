@@ -91,6 +91,8 @@ public class ProductDAO extends BaseDAO<ProductEntity>
         TypedQuery<ProductEntity> productQuery = entityManager.createQuery(sqlProduct.toString(), ProductEntity.class);
         productQuery.setParameter("productType", productType);
 
+        System.out.println("S->C DROPQUERY [" + sqlProduct.toString() + "]");
+
         productQuery.setFirstResult(number);
         productQuery.setMaxResults(1);
         return productQuery.getSingleResult();

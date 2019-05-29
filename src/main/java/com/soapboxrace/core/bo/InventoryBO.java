@@ -334,6 +334,9 @@ public class InventoryBO {
 			inventoryItemEntity.setRemainingUseCount(inventoryItemEntity.getRemainingUseCount() + productEntity.getUseCount());
 			inventoryItemDAO.update(inventoryItemEntity);
 			break;
+		case PRESETCAR:
+			//How the f**k you can add a car now?
+			break;
 		default:
 			break;
 		}

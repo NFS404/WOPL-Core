@@ -98,4 +98,8 @@ public class BanEntity {
 	{
 		this.started = started;
 	}
+
+	public enum BanType {
+		USER_BAN, IP_BAN, HWID_BAN, EMAIL_BAN
+	}
 }
