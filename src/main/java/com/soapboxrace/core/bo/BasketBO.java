@@ -12,6 +12,9 @@ import com.soapboxrace.jaxb.http.CommerceResultStatus;
 import com.soapboxrace.jaxb.http.OwnedCarTrans;
 import com.soapboxrace.jaxb.util.UnmarshalXML;
 
+import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
+import com.soapboxrace.core.xmpp.XmppChat;
+
 @Stateless
 public class BasketBO
 {
@@ -66,6 +69,9 @@ public class BasketBO
 
     @EJB
     private CarBO carBO;
+
+    @EJB
+    private OpenFireSoapBoxCli openFireSoapBoxCli;
 
     private OwnedCarTrans getCar(String productId)
     {
@@ -182,14 +188,20 @@ public class BasketBO
         }
 
         ProductEntity productEntity = productDao.findByProductId(productId);
+        //openFireSoapBoxCli.send(XmppChat.createSystemMessage("[CURR] " + productEntity.getCurrency()), personaEntity.getPersonaId());
+
         if (productEntity != null) {
             if(productEntity.getCurrency() == "CASH") {
-                if(personaEntity.getCash() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+                if(personaEntity.getCash() < productEntity.getPrice()) {
+                    return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;  
+                }
             } else {
-                if(personaEntity.getBoost() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+                if(personaEntity.getBoost() < productEntity.getPrice()) { 
+                    return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+                }
             }
         } else {
-             return CommerceResultStatus.FAIL_INVALID_BASKET;
+            return CommerceResultStatus.FAIL_INVALID_BASKET;
         }
 
         CarSlotEntity carSlotEntity = addCar(productId, personaEntity);

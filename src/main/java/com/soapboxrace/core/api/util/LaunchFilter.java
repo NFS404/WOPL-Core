@@ -48,7 +48,7 @@ public class LaunchFilter implements ContainerRequestFilter {
 			userDao.update(userEntity);
 		}
 
-		if(!discordid.isEmpty() && userEntity.getDiscordId() != null) {
+		if(discordid != null && userEntity.getDiscordId() != null) {
 			userEntity.setDiscordId(discordid);
 			userDao.update(userEntity);
 		}

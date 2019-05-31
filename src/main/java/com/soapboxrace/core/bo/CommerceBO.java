@@ -38,6 +38,9 @@ import com.soapboxrace.jaxb.http.PerformancePartTrans;
 import com.soapboxrace.jaxb.http.SkillModPartTrans;
 import com.soapboxrace.jaxb.http.VisualPartTrans;
 
+import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
+import com.soapboxrace.core.xmpp.XmppChat;
+
 @Stateless
 public class CommerceBO {
 	@EJB
@@ -84,6 +87,9 @@ public class CommerceBO {
 
 	@EJB
 	private CarClassesDAO carClassesDAO;
+
+	@EJB
+	private OpenFireSoapBoxCli openFireSoapBoxCli;
 
 	public OwnedCarTrans responseCar(CommerceSessionTrans commerceSessionTrans) {
 		OwnedCarTrans ownedCarTrans = new OwnedCarTrans();
