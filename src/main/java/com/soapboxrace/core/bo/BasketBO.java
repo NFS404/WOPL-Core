@@ -182,12 +182,14 @@ public class BasketBO
         }
 
         ProductEntity productEntity = productDao.findByProductId(productId);
-        if (productEntity == null) {
+        if (productEntity != null) {
             if(productEntity.getCurrency() == "CASH") {
                 if(personaEntity.getCash() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
             } else {
                 if(personaEntity.getBoost() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
             }
+        } else {
+             return CommerceResultStatus.FAIL_INVALID_BASKET;
         }
 
         CarSlotEntity carSlotEntity = addCar(productId, personaEntity);
