@@ -182,17 +182,22 @@ public class BasketBO
         }
 
         ProductEntity productEntity = productDao.findByProductId(productId);
-        if (productEntity == null || personaEntity.getCash() < productEntity.getPrice())
-        {
-            return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+        if (productEntity == null) {
+            if(productEntity.getCurrency() == "CASH") {
+                if(personaEntity.getCash() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+            } else {
+                if(personaEntity.getBoost() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+            }
         }
 
         CarSlotEntity carSlotEntity = addCar(productId, personaEntity);
 
-        if (parameterBO.getBoolParam("ENABLE_ECONOMY"))
-        {
-            personaEntity.setCash(personaEntity.getCash() - productEntity.getPrice());
-            personaEntity.setBoost(personaEntity.getBoost() - productEntity.getPrice());
+        if (parameterBO.getBoolParam("ENABLE_ECONOMY")) {
+            if(productEntity.getCurrency() == "CASH") {
+                personaEntity.setCash(personaEntity.getCash() - productEntity.getPrice());
+            } else {
+                personaEntity.setBoost(personaEntity.getBoost() - productEntity.getPrice());
+            }
         }
         personaDao.update(personaEntity);
 
