@@ -26,6 +26,9 @@ public class UserEntity {
 	@Column(name = "HWID")
 	private String hwid;
 
+	@Column(name = "DiscordID", length = 255)
+	private String discordid;
+
 	private String gameHardwareHash;
 
 	@Column(name = "IP_ADDRESS")
@@ -80,6 +83,14 @@ public class UserEntity {
 
 	public void setHwid(String hwid) {
 		this.hwid = hwid;
+	}
+
+	public String getDiscordId() {
+		return discordid;
+	}
+
+	public void setDiscordId(String discordid) {
+		this.discordid = discordid;
 	}
 
 	public String getIpAddress() {

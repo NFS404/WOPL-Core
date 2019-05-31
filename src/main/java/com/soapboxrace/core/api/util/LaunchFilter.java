@@ -39,11 +39,17 @@ public class LaunchFilter implements ContainerRequestFilter {
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 		String hwid = requestContext.getHeaderString("X-HWID");
+		String discordid = requestContext.getHeaderString("X-DiscordID");
 		String email = sr.getParameter("email");
 
 		UserEntity userEntity = userDao.findByEmail(email);
 		if(userEntity != null) {
 			userEntity.setHwid(hwid);
+			userDao.update(userEntity);
+		}
+
+		if(!discordid.isEmpty() && userEntity.getDiscordId() != null) {
+			userEntity.setDiscordId(discordid);
 			userDao.update(userEntity);
 		}
 
