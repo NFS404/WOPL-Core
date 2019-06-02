@@ -39,7 +39,6 @@ public class LaunchFilter implements ContainerRequestFilter {
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 		String hwid = requestContext.getHeaderString("X-HWID");
-		String discordid = requestContext.getHeaderString("X-DiscordID");
 		String email = sr.getParameter("email");
 
 		UserEntity userEntity = userDao.findByEmail(email);
@@ -47,12 +46,6 @@ public class LaunchFilter implements ContainerRequestFilter {
 			userEntity.setHwid(hwid);
 			userDao.update(userEntity);
 		}
-
-		if(discordid != null) {
-			userEntity.setDiscordId(discordid);
-			userDao.update(userEntity);
-		}
-
 
 		if (parameterBO.getBoolParam("ENABLE_METONATOR_LAUNCHER_PROTECTION")) {
 			String userAgent = requestContext.getHeaderString("User-Agent");

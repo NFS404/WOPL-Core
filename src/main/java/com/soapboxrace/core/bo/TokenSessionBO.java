@@ -159,12 +159,16 @@ public class TokenSessionBO {
 						}
 
 						userEntity.setLastLogin(LocalDateTime.now());
+						userEntity.setIpAddress(httpRequest.getRemoteAddr());
+						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
 						userDAO.update(userEntity);
 						Long userId = userEntity.getId();
 						deleteByUserId(userId);
 						String randomUUID = createToken(userId, null);
 						loginStatusVO = new LoginStatusVO(userId, randomUUID, true);
 						loginStatusVO.setDescription("");
+
+
 
 						return loginStatusVO;
 					}
