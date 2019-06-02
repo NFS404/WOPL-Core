@@ -180,43 +180,37 @@ public class BasketBO
         return CommerceResultStatus.SUCCESS;
     }
 
-    public CommerceResultStatus buyCar(String productId, PersonaEntity personaEntity, String securityToken)
-    {
-        if (getPersonaCarCount(personaEntity.getPersonaId()) >= parameterBO.getCarLimit(securityToken))
-        {
+    public CommerceResultStatus buyCar(String productId, PersonaEntity personaEntity, String securityToken) {
+        if (getPersonaCarCount(personaEntity.getPersonaId()) >= parameterBO.getCarLimit(securityToken)) {
             return CommerceResultStatus.FAIL_INSUFFICIENT_CAR_SLOTS;
         }
 
         ProductEntity productEntity = productDao.findByProductId(productId);
-        //openFireSoapBoxCli.send(XmppChat.createSystemMessage("[CURR] " + productEntity.getCurrency()), personaEntity.getPersonaId());
 
-        if (productEntity != null) {
-            if(productEntity.getCurrency() == "CASH") {
-                if(personaEntity.getCash() < productEntity.getPrice()) {
-                    return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;  
-                }
-            } else {
-                if(personaEntity.getBoost() < productEntity.getPrice()) { 
-                    return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
-                }
+        if(productEntity != null) {
+            System.out.printf("PRODUCT EXISTS, USES '%s' AS CURRENCY", productEntity.getCurrency());
+
+            switch (productEntity.getCurrency()) {
+                case "CASH":
+                    if(personaEntity.getCash() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+                    if(parameterBO.getBoolParam("ENABLE_ECONOMY")) personaEntity.setCash(personaEntity.getCash() - productEntity.getPrice());
+                    break;
+                case "_NS":
+                    if(personaEntity.getBoost() < productEntity.getPrice()) return CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS;
+                    if(parameterBO.getBoolParam("ENABLE_ECONOMY")) personaEntity.setBoost(personaEntity.getBoost() - productEntity.getPrice());
+                    break;
+                default:
+                    return CommerceResultStatus.FAIL_LOCKED_PRODUCT_NOT_ACCESSIBLE_TO_THIS_USER;
             }
+
+            CarSlotEntity carSlotEntity = addCar(productId, personaEntity);
+
+            personaDao.update(personaEntity);
+            personaBo.changeDefaultCar(personaEntity.getPersonaId(), carSlotEntity.getOwnedCar().getId());
+            return CommerceResultStatus.SUCCESS;
         } else {
             return CommerceResultStatus.FAIL_INVALID_BASKET;
         }
-
-        CarSlotEntity carSlotEntity = addCar(productId, personaEntity);
-
-        if (parameterBO.getBoolParam("ENABLE_ECONOMY")) {
-            if(productEntity.getCurrency() == "CASH") {
-                personaEntity.setCash(personaEntity.getCash() - productEntity.getPrice());
-            } else {
-                personaEntity.setBoost(personaEntity.getBoost() - productEntity.getPrice());
-            }
-        }
-        personaDao.update(personaEntity);
-
-        personaBo.changeDefaultCar(personaEntity.getPersonaId(), carSlotEntity.getOwnedCar().getId());
-        return CommerceResultStatus.SUCCESS;
     }
 
     public CarSlotEntity addCar(String productId, PersonaEntity personaEntity)
