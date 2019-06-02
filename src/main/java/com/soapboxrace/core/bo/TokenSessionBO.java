@@ -12,6 +12,7 @@ import com.soapboxrace.core.jpa.TokenSessionEntity;
 import com.soapboxrace.core.jpa.UserEntity;
 import com.soapboxrace.jaxb.*;
 import com.soapboxrace.jaxb.login.LoginStatusVO;
+import com.soapboxrace.core.bo.HardwareInfoBO;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -48,6 +49,9 @@ public class TokenSessionBO {
 
 	@EJB
 	private Argon2BO argon2;
+
+	@EJB
+	private HardwareInfoBO hardwareInfoBO;
 
 	public boolean verifyToken(Long userId, String securityToken) {
 		TokenSessionEntity tokenSessionEntity = tokenDAO.findById(securityToken);
@@ -154,6 +158,13 @@ public class TokenSessionBO {
 							ban.setReason(banEntity.getReason());
 							if (banEntity.getEndsAt() != null)
 								ban.setExpires(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL).withZone(ZoneId.systemDefault()).format(banEntity.getEndsAt()));
+							loginStatusVO.setBan(ban);
+							return loginStatusVO;
+						}
+
+						if (hardwareInfoBO.isHardwareHashBanned(userEntity.getGameHardwareHash())) {
+							LoginStatusVO.Ban ban = new LoginStatusVO.Ban();
+							ban.setReason("GameHardwareHash has been banned. Please contact our team for further info");
 							loginStatusVO.setBan(ban);
 							return loginStatusVO;
 						}
