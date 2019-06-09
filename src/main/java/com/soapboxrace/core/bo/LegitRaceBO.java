@@ -27,6 +27,7 @@ public class LegitRaceBO {
 
 	public boolean isLegit(Long activePersonaId, ArbitrationPacket arbitrationPacket, EventSessionEntity sessionEntity) {
 		int minimumTime = 0;
+		int finishReason = arbitrationPacket.getFinishReason();
 
 		if (arbitrationPacket instanceof PursuitArbitrationPacket)
 			minimumTime = parameterBO.getIntParam("PURSUIT_MINIMUM_TIME");
@@ -40,7 +41,7 @@ public class LegitRaceBO {
 		final long timeDiff = sessionEntity.getEnded() - sessionEntity.getStarted();
 		boolean legit = timeDiff > minimumTime + 1;
 
-		if (!legit) {
+		if (!legit && finishReason != 0) {
 			//SHADOWBAN THAT USER!
 			PersonaEntity persona = personaDAO.findById(activePersonaId);
 			persona.setShadowBanned(true);
