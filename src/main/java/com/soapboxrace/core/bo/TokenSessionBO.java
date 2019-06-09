@@ -149,7 +149,7 @@ public class TokenSessionBO {
 			UserEntity userEntity = userDAO.findByEmail(email);
 
 			if (userEntity != null) {
-				if(userEntity.isAdmin() || parameterBO.getBoolParam("IS_MAINTEANCE") == false) {
+				if(userEntity.isAdmin() || parameterBO.getBoolParam("IS_MAINTENANCE") == false) {
 					if (password.equals(userEntity.getPassword())) {
 						BanEntity banEntity = authenticationBO.checkUserBan(userEntity);
 
@@ -164,7 +164,7 @@ public class TokenSessionBO {
 
 						if (hardwareInfoBO.isHardwareHashBanned(userEntity.getGameHardwareHash())) {
 							LoginStatusVO.Ban ban = new LoginStatusVO.Ban();
-							ban.setReason("GameHardwareHash has been banned. Please contact our team for further info");
+							ban.setReason("GameHardwareHash has been banned. Please contact our team for further info.");
 							loginStatusVO.setBan(ban);
 							return loginStatusVO;
 						}
@@ -172,6 +172,7 @@ public class TokenSessionBO {
 						userEntity.setLastLogin(LocalDateTime.now());
 						userEntity.setIpAddress(httpRequest.getRemoteAddr());
 						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
+						userEntity.setUA(httpRequest.getHeader("X-UserAgent"));
 						userDAO.update(userEntity);
 
 						Long userId = userEntity.getId();
@@ -183,7 +184,7 @@ public class TokenSessionBO {
 						return loginStatusVO;
 					}
 				} else {
-					loginStatusVO.setDescription("Server is in mainteance. Please follow our discord for more info.");
+					loginStatusVO.setDescription("Server is in maintenance. Please follow our discord for more info.");
          			return loginStatusVO;
 				}
 			}

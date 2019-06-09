@@ -32,6 +32,7 @@ public class PersonaEntity {
 	private int repAtCurrentLevel;
 	private int score;
 	private int curCarIndex = 0;
+	private boolean shadowBanned = false;
 	@ManyToOne
 	@JoinColumn(name = "USERID", referencedColumnName = "ID", foreignKey = @ForeignKey(name = "FK_PERSONA_USER"))
 	private UserEntity user;
@@ -89,6 +90,14 @@ public class PersonaEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public boolean getShadowBanned() {
+		return shadowBanned;
+	}
+
+	public void setShadowBanned(boolean ban) {
+		this.shadowBanned = ban;
 	}
 
 	public float getPercentToLevel() {

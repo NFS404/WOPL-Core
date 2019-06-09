@@ -13,10 +13,13 @@ import javax.ws.rs.core.MediaType;
 import com.soapboxrace.core.api.util.Secured;
 import com.soapboxrace.core.bo.*;
 import com.soapboxrace.core.jpa.EventSessionEntity;
+import com.soapboxrace.core.jpa.PersonaEntity;
 import com.soapboxrace.jaxb.http.LobbyInfo;
 import com.soapboxrace.jaxb.http.OwnedCarTrans;
 import com.soapboxrace.jaxb.http.SecurityChallenge;
 import com.soapboxrace.jaxb.http.SessionInfo;
+
+import com.soapboxrace.core.dao.PersonaDAO;
 
 @Path("/matchmaking")
 public class MatchMaking {
@@ -36,6 +39,9 @@ public class MatchMaking {
 	@EJB
 	private MatchmakingBO matchmakingBO;
 
+	@EJB
+    private PersonaDAO personaDAO;
+
 	@PUT
 	@Secured
 	@Path("/joinqueueracenow")
@@ -43,6 +49,10 @@ public class MatchMaking {
 	public String joinQueueRaceNow(@HeaderParam("securityToken") String securityToken) {
 		Long activePersonaId = tokenSessionBO.getActivePersonaId(securityToken);
 		OwnedCarTrans defaultCar = personaBO.getDefaultCar(activePersonaId);
+		PersonaEntity persona = personaDAO.findById(activePersonaId);
+
+		if(persona.getShadowBanned() == true) return "";
+
 		lobbyBO.joinFastLobby(activePersonaId, defaultCar.getCustomCar().getCarClassHash());
 		return "";
 	}
@@ -53,6 +63,10 @@ public class MatchMaking {
 	@Produces(MediaType.APPLICATION_XML)
 	public String joinQueueEvent(@HeaderParam("securityToken") String securityToken, @PathParam("eventId") int eventId) {
 		Long activePersonaId = tokenSessionBO.getActivePersonaId(securityToken);
+		PersonaEntity persona = personaDAO.findById(activePersonaId);
+
+		if(persona.getShadowBanned() == true) return "";
+
 		lobbyBO.joinQueueEvent(activePersonaId, eventId);
 		return "";
 	}

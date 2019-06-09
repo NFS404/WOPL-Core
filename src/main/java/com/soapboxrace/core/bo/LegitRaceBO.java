@@ -4,11 +4,14 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import com.soapboxrace.core.jpa.EventSessionEntity;
+import com.soapboxrace.core.jpa.PersonaEntity;
 import com.soapboxrace.jaxb.http.ArbitrationPacket;
 import com.soapboxrace.jaxb.http.DragArbitrationPacket;
 import com.soapboxrace.jaxb.http.PursuitArbitrationPacket;
 import com.soapboxrace.jaxb.http.RouteArbitrationPacket;
 import com.soapboxrace.jaxb.http.TeamEscapeArbitrationPacket;
+
+import com.soapboxrace.core.dao.PersonaDAO;
 
 @Stateless
 public class LegitRaceBO {
@@ -18,6 +21,9 @@ public class LegitRaceBO {
 
 	@EJB
 	private SocialBO socialBo;
+
+    @EJB
+    private PersonaDAO personaDAO;
 
 	public boolean isLegit(Long activePersonaId, ArbitrationPacket arbitrationPacket, EventSessionEntity sessionEntity) {
 		int minimumTime = 0;
@@ -35,12 +41,20 @@ public class LegitRaceBO {
 		boolean legit = timeDiff > minimumTime + 1;
 
 		if (!legit) {
-			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d", timeDiff), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
+			//SHADOWBAN THAT USER!
+			PersonaEntity persona = personaDAO.findById(activePersonaId);
+			persona.setShadowBanned(true);
+			personaDAO.update(persona);
+
+
+			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d. User is ShadowBanned", timeDiff), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
 		}
-		if (arbitrationPacket.getHacksDetected() > 0) {
-			socialBo.sendReport(0L, activePersonaId, 3, "hacksDetected > 0", (int) arbitrationPacket.getCarId(), 0,
+
+		if (arbitrationPacket.getHacksDetected() != 0 && arbitrationPacket.getHacksDetected() != 32) {
+			socialBo.sendReport(0L, activePersonaId, 3, "hacksDetected == " + arbitrationPacket.getHacksDetected(), (int) arbitrationPacket.getCarId(), 0,
 					arbitrationPacket.getHacksDetected());
 		}
+
 		return legit;
 	}
 }

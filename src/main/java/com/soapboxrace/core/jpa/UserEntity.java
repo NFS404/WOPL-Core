@@ -29,6 +29,9 @@ public class UserEntity {
 	@Column(name = "DiscordID", length = 255)
 	private String discordid;
 
+	@Column(name = "UserAgent", length = 255)
+	private String ua;
+
 	private String gameHardwareHash;
 
 	@Column(name = "IP_ADDRESS")
@@ -91,6 +94,14 @@ public class UserEntity {
 
 	public void setDiscordId(String discordid) {
 		this.discordid = discordid;
+	}
+
+	public String getUA() {
+		return ua;
+	}
+
+	public void setUA(String ua) {
+		this.ua = ua;
 	}
 
 	public String getIpAddress() {
