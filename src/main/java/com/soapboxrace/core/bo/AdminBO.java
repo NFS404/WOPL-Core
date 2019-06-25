@@ -130,7 +130,7 @@ public class AdminBO {
 		}
 	}
 
-	private void sendKick(Long userId, Long personaId)
+	public void sendKick(Long userId, Long personaId)
 	{
 		openFireSoapBoxCli.send("<NewsArticleTrans><ExpiryTime><", personaId);
 		tokenSessionBo.deleteByUserId(userId);

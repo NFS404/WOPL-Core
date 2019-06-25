@@ -172,7 +172,7 @@ public class TokenSessionBO {
 						userEntity.setLastLogin(LocalDateTime.now());
 						userEntity.setIpAddress(httpRequest.getRemoteAddr());
 						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
-						userEntity.setUA(httpRequest.getHeader("X-UserAgent"));
+						userEntity.setUA(httpRequest.getHeader("X-UserAgent") + httpRequest.getHeader("X-User-Agent"));
 						userDAO.update(userEntity);
 
 						Long userId = userEntity.getId();

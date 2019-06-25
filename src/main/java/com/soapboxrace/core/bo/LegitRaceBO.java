@@ -1,5 +1,9 @@
 package com.soapboxrace.core.bo;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
@@ -12,6 +16,7 @@ import com.soapboxrace.jaxb.http.RouteArbitrationPacket;
 import com.soapboxrace.jaxb.http.TeamEscapeArbitrationPacket;
 
 import com.soapboxrace.core.dao.PersonaDAO;
+import com.soapboxrace.core.bo.AdminBO;
 
 @Stateless
 public class LegitRaceBO {
@@ -25,6 +30,9 @@ public class LegitRaceBO {
     @EJB
     private PersonaDAO personaDAO;
 
+    @EJB
+    private AdminBO adminBo;
+
 	public boolean isLegit(Long activePersonaId, ArbitrationPacket arbitrationPacket, EventSessionEntity sessionEntity) {
 		int minimumTime = 0;
 		boolean quitted_event = false;
@@ -35,7 +43,7 @@ public class LegitRaceBO {
 			minimumTime = parameterBO.getIntParam("ROUTE_MINIMUM_TIME");
 		} else if (arbitrationPacket instanceof TeamEscapeArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("TE_MINIMUM_TIME");
-			quitted_event = arbitrationPacket.getFinishReason() == 8202;
+			quitted_event = arbitrationPacket.getFinishReason() == 8202 && arbitrationPacket.getFinishReason() == 266;
 		} else if (arbitrationPacket instanceof DragArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("DRAG_MINIMUM_TIME");
 		}
@@ -46,15 +54,23 @@ public class LegitRaceBO {
 		if (!legit && !quitted_event) {
 			//SHADOWBAN THAT USER!
 			PersonaEntity persona = personaDAO.findById(activePersonaId);
-			persona.setShadowBanned(true);
-			personaDAO.update(persona);
 
+			if(persona.getShadowBanned() == false) {
+				persona.setShadowBanned(true);
+				personaDAO.update(persona);
 
-			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d. User is ShadowBanned", timeDiff), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
+			    Date date = new Date(timeDiff);
+			    SimpleDateFormat formatter = new SimpleDateFormat("mm:ss.SSS");
+			    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+			    String formatted = formatter.format(date);
+
+				socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d. User is ShadowBanned", formatted), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
+				adminBo.sendKick(persona.getUser().getId(), activePersonaId);
+			}
 		}
 
 		if (arbitrationPacket.getHacksDetected() != 0 && arbitrationPacket.getHacksDetected() != 32) {
-			socialBo.sendReport(0L, activePersonaId, 3, "hacksDetected == " + arbitrationPacket.getHacksDetected(), (int) arbitrationPacket.getCarId(), 0,
+			socialBo.sendReport(0L, activePersonaId, 3, "hacksDetected = " + arbitrationPacket.getHacksDetected(), (int) arbitrationPacket.getCarId(), 0,
 					arbitrationPacket.getHacksDetected());
 		}
 
