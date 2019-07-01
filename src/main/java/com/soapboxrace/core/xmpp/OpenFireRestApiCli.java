@@ -1,6 +1,8 @@
 package com.soapboxrace.core.xmpp;
 
 import com.soapboxrace.core.bo.ParameterBO;
+import com.soapboxrace.core.dao.TokenSessionDAO;
+
 import org.igniterealtime.restclient.entity.*;
 
 import javax.annotation.PostConstruct;
@@ -27,6 +29,9 @@ public class OpenFireRestApiCli
 
 	@EJB
 	private ParameterBO parameterBO;
+
+	@EJB
+	private TokenSessionDAO tokenDAO;
 
 	@PostConstruct
 	public void init()
@@ -80,20 +85,8 @@ public class OpenFireRestApiCli
 		createUpdatePersona(user, password);
 	}
 
-	public int getTotalOnlineUsers()
-	{
-		if (!restApiEnabled)
-		{
-			return 0;
-		}
-		Builder builder = getBuilder("system/statistics/sessions");
-		SessionsCount sessionsCount = builder.get(SessionsCount.class);
-		int clusterSessions = sessionsCount.getClusterSessions();
-		if (clusterSessions > 1)
-		{
-			return clusterSessions - 1;
-		}
-		return 0;
+	public int getTotalOnlineUsers() {
+		return tokenDAO.getUsersOnlineCount();
 	}
 
 	public List<Long> getAllPersonaByGroup(Long personaId)

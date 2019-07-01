@@ -13,7 +13,8 @@ import java.util.Date;
 						+ "SET obj.relayCryptoTicket = :relayCryptoTicket WHERE obj.activePersonaId = :personaId"), //
 		@NamedQuery(name = "TokenSessionEntity.updateLobbyId", //
 				query = "UPDATE TokenSessionEntity obj " //
-						+ "SET obj.activeLobbyId = :activeLobbyId WHERE obj.activePersonaId = :personaId") //
+						+ "SET obj.activeLobbyId = :activeLobbyId WHERE obj.activePersonaId = :personaId"), //
+		@NamedQuery(name = "TokenSessionEntity.getUsersOnlineCount", query = "SELECT Count(obj) FROM TokenSessionEntity obj WHERE obj.isLoggedIn = 1")
 })
 public class TokenSessionEntity {
 
@@ -26,17 +27,12 @@ public class TokenSessionEntity {
 
 	@Column(nullable = false)
 	private Date expirationDate;
-
 	private Long activePersonaId;
-
 	private String relayCryptoTicket;
-
 	private Long activeLobbyId;
-
 	private boolean premium = false;
-
 	private String clientHostIp;
-
+	private boolean isLoggedIn;
 	private String cryptoTicket;
 
 	public String getSecurityToken() {
@@ -109,5 +105,13 @@ public class TokenSessionEntity {
 
 	public void setCryptoTicket(String cryptoTicket) {
 		this.cryptoTicket = cryptoTicket;
+	}
+
+	public boolean getIsLoggedIn() {
+		return isLoggedIn;
+	}
+
+	public void setIsLoggedIn(boolean isLoggedIn) {
+		this.isLoggedIn = isLoggedIn;
 	}
 }
