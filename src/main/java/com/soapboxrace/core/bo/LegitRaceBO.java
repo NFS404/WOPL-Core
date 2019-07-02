@@ -18,6 +18,8 @@ import com.soapboxrace.jaxb.http.TeamEscapeArbitrationPacket;
 import com.soapboxrace.core.dao.PersonaDAO;
 import com.soapboxrace.core.bo.AdminBO;
 
+import com.soapboxrace.core.api.util.EventFinishReason;
+
 @Stateless
 public class LegitRaceBO {
 
@@ -43,7 +45,7 @@ public class LegitRaceBO {
 			minimumTime = parameterBO.getIntParam("ROUTE_MINIMUM_TIME");
 		} else if (arbitrationPacket instanceof TeamEscapeArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("TE_MINIMUM_TIME");
-			quitted_event = arbitrationPacket.getFinishReason() == 8202;
+			quitted_event = arbitrationPacket.getFinishReason() == EventFinishReason.ABORTED.getValue();
 		} else if (arbitrationPacket instanceof DragArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("DRAG_MINIMUM_TIME");
 		}

@@ -26,6 +26,7 @@ public class GetServerInformationBO {
 			serverInfoEntity.setRequireTicket(true);
 		}
 		serverInfoEntity.setServerVersion("0.1.0");
+		serverInfoEntity.setGameShutdownTimeInSeconds(parameterBO.getIntParam("MTNTR_GAMESHUTDOWNTIME", 3*60*60));
 		return serverInfoEntity;
 	}
 

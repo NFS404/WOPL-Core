@@ -45,6 +45,8 @@ public class ServerInfoEntity {
 	@Transient
 	private boolean modernAuthSupport;
 
+	private int gameShutdownTimeInSeconds;
+
 	public String getMessageSrv() {
 		return messageSrv;
 	}
@@ -203,5 +205,13 @@ public class ServerInfoEntity {
 
 	public void setModsUrl(String modsUrl) {
 		this.modsUrl = modsUrl;
+	}
+
+	public int getGameShutdownTimeInSeconds() {
+		return gameShutdownTimeInSeconds;
+	}
+
+	public void setGameShutdownTimeInSeconds(int gameShutdownTimeInSeconds) {
+		this.gameShutdownTimeInSeconds = gameShutdownTimeInSeconds;
 	}
 }
