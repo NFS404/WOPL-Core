@@ -43,7 +43,7 @@ public class LegitRaceBO {
 			minimumTime = parameterBO.getIntParam("ROUTE_MINIMUM_TIME");
 		} else if (arbitrationPacket instanceof TeamEscapeArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("TE_MINIMUM_TIME");
-			quitted_event = arbitrationPacket.getFinishReason() == 8202 && arbitrationPacket.getFinishReason() == 266;
+			quitted_event = arbitrationPacket.getFinishReason() == 8202;
 		} else if (arbitrationPacket instanceof DragArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("DRAG_MINIMUM_TIME");
 		}

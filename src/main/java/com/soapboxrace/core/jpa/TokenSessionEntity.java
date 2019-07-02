@@ -14,7 +14,7 @@ import java.util.Date;
 		@NamedQuery(name = "TokenSessionEntity.updateLobbyId", //
 				query = "UPDATE TokenSessionEntity obj " //
 						+ "SET obj.activeLobbyId = :activeLobbyId WHERE obj.activePersonaId = :personaId"), //
-		@NamedQuery(name = "TokenSessionEntity.getUsersOnlineCount", query = "SELECT Count(obj) FROM TokenSessionEntity obj WHERE obj.isLoggedIn = 1")
+		@NamedQuery(name = "TokenSessionEntity.getUsersOnlineCount", query = "SELECT Count(obj) FROM TokenSessionEntity obj WHERE obj.expirationDate >= NOW() AND obj.isLoggedIn = 1")
 })
 public class TokenSessionEntity {
 
