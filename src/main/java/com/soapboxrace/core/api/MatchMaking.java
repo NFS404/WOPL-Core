@@ -30,6 +30,8 @@ import com.soapboxrace.core.xmpp.XmppChat;
 import org.igniterealtime.restclient.entity.MUCRoomEntity;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.soapboxrace.core.bo.util.DiscordWebhook;
+
 
 @Path("/matchmaking")
 public class MatchMaking {
@@ -45,6 +47,9 @@ public class MatchMaking {
 
 	@EJB
 	private PersonaBO personaBO;
+
+	@EJB
+	private ParameterBO parameterBO;
 	
 	@EJB
 	private MatchmakingBO matchmakingBO;
@@ -64,6 +69,8 @@ public class MatchMaking {
     @EJB
     private OpenFireSoapBoxCli openFireSoapBoxCli;
 
+	@EJB
+	private DiscordWebhook discord;
 
 	@PUT
 	@Secured
@@ -157,22 +164,37 @@ public class MatchMaking {
 
 		//lobbydata
 		LobbyEntity lobbyInformation = lobbyDAO.findById(lobbyInviteId);
-		if(activePersonaId == lobbyInformation.getPersonaId()) {
+		System.out.println(lobbyInformation.getPersonaId() + " == " + activePersonaId);
+		if(activePersonaId.equals(lobbyInformation.getPersonaId())) {
+			System.out.println("Passed!");
+
 			//eventname
 			EventEntity eventInformation = lobbyInformation.getEvent();
 			String eventNameFull = eventInformation.getName();
-			String eventName = eventNameFull.split("(")[0];
+			String eventName = eventNameFull.split("\\(")[0];
 
 			//personaname
 			PersonaEntity personaEntity = personaDAO.findById(activePersonaId);
 			
+			//construct message
+			String msg = personaEntity.getName() + " is looking for racers on " + eventName;
+
+			//send to discord
+			if(parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_URL") != null) {
+				discord.sendMessage(msg, 
+					parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_URL"), 
+					parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_NAME", "Botte")
+				);
+			}
+
 			//now the hardest, send to all...
-			List<MUCRoomEntity> channels = restApiCli.getAllRooms().stream().filter(r -> r.getRoomName().startsWith("chan")).collect(Collectors.toList());
-            String message = XmppChat.createSystemMessage(personaEntity.getName() + " is looking for racers on " + eventName);
+			List<MUCRoomEntity> channels = restApiCli.getAllRooms().stream().collect(Collectors.toList());
+            String message = XmppChat.createSystemMessage(msg);
 
             for (MUCRoomEntity channel : channels) {
                 List<Long> members = restApiCli.getAllOccupantsInRoom(channel.getRoomName());
                 
+                System.out.println(channel.getRoomName());
                 for (Long member : members) {
                     openFireSoapBoxCli.send(message, member);
                 }
