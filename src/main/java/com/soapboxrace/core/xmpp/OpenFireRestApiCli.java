@@ -19,6 +19,8 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.soapboxrace.core.bo.util.DiscordWebhook;
+
 @Startup
 @Singleton
 public class OpenFireRestApiCli
@@ -33,6 +35,9 @@ public class OpenFireRestApiCli
 	@EJB
 	private TokenSessionDAO tokenDAO;
 
+	@EJB
+	private DiscordWebhook discord;
+
 	@PostConstruct
 	public void init()
 	{
@@ -43,6 +48,8 @@ public class OpenFireRestApiCli
 			restApiEnabled = true;
 		}
 		createUpdatePersona("sbrw.engine.engine", openFireToken);
+
+		discord.sendMessage("Server is now up and running!");
 	}
 
 	private Builder getBuilder(String path)

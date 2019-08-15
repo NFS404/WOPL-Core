@@ -37,6 +37,9 @@ public class BanEntity {
 	@Column
 	private boolean willEnd;
 
+	@Column
+	private String data;
+
 	public Long getId() {
 		return id;
 	}
@@ -61,6 +64,16 @@ public class BanEntity {
 	public void setBannedBy(PersonaEntity bannedBy)
 	{
 		this.bannedBy = bannedBy;
+	}
+
+	public String getData()
+	{
+		return data;
+	}
+
+	public void setData(String data)
+	{
+		this.data = data;
 	}
 
 	public LocalDateTime getEndsAt() {

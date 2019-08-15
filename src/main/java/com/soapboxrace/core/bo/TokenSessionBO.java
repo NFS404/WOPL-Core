@@ -162,9 +162,11 @@ public class TokenSessionBO {
 							return loginStatusVO;
 						}
 
-						if (hardwareInfoBO.isHardwareHashBanned(userEntity.getGameHardwareHash())) {
+						//check if hwid is banned//
+						BanEntity banEntity2 = authenticationBO.checkHWIDBan(httpRequest.getHeader("X-HWID"));
+						if(banEntity2 != null) {
 							LoginStatusVO.Ban ban = new LoginStatusVO.Ban();
-							ban.setReason("GameHardwareHash has been banned. Please contact our team for further info.");
+							ban.setReason("This HWID is banned from another user. Please contact administration for more info.");
 							loginStatusVO.setBan(ban);
 							return loginStatusVO;
 						}
@@ -172,7 +174,13 @@ public class TokenSessionBO {
 						userEntity.setLastLogin(LocalDateTime.now());
 						userEntity.setIpAddress(httpRequest.getRemoteAddr());
 						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
-						userEntity.setUA(httpRequest.getHeader("X-UserAgent") + httpRequest.getHeader("X-User-Agent"));
+
+						if(httpRequest.getHeader("X-UserAgent") == null) {
+							userEntity.setUA(httpRequest.getHeader("X-User-Agent"));
+						} else {
+							userEntity.setUA(httpRequest.getHeader("X-UserAgent"));
+						}
+
 						userDAO.update(userEntity);
 
 						Long userId = userEntity.getId();

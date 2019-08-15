@@ -112,6 +112,7 @@ public class AdminBO {
 	{
 		UserEntity userEntity = personaEntity.getUser();
 		BanEntity banEntity = new BanEntity();
+		banEntity.setData(userEntity.getHwid());
 		banEntity.setUserEntity(userEntity);
 		banEntity.setEndsAt(endsOn);
 		banEntity.setStarted(LocalDateTime.now());
@@ -120,14 +121,8 @@ public class AdminBO {
 		banEntity.setWillEnd(endsOn != null);
 		banDAO.insert(banEntity);
 		userDao.update(userEntity);
+		openFireSoapBoxCli.send(XmppChat.createSystemMessage("You're banned from the server. " + reason), personaEntity.getPersonaId());
 		sendKick(userEntity.getId(), personaEntity.getPersonaId());
-
-		HardwareInfoEntity hardwareInfoEntity = hardwareInfoDAO.findByUserId(userEntity.getId());
-
-		if (hardwareInfoEntity != null) {
-			hardwareInfoEntity.setBanned(true);
-			hardwareInfoDAO.update(hardwareInfoEntity);
-		}
 	}
 
 	public void sendKick(Long userId, Long personaId)

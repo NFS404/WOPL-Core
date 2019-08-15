@@ -43,9 +43,7 @@ public class ServerInfoEntity {
 	@Transient
 	private String serverVersion;
 	@Transient
-	private boolean modernAuthSupport;
-
-	private int gameShutdownTimeInSeconds;
+	private int secondsToShutDown;
 
 	public String getMessageSrv() {
 		return messageSrv;
@@ -183,14 +181,6 @@ public class ServerInfoEntity {
 		this.allowedCountries = allowedCountries;
 	}
 
-	public boolean isModernAuthSupport() {
-		return modernAuthSupport;
-	}
-
-	public void setModernAuthSupport(boolean modernAuthSupport) {
-		this.modernAuthSupport = modernAuthSupport;
-	}
-
 	public String getIconUrl() {
 		return iconUrl;
 	}
@@ -207,11 +197,11 @@ public class ServerInfoEntity {
 		this.modsUrl = modsUrl;
 	}
 
-	public int getGameShutdownTimeInSeconds() {
-		return gameShutdownTimeInSeconds;
+	public int getSecondsToShutDown() {
+		return secondsToShutDown;
 	}
 
-	public void setGameShutdownTimeInSeconds(int gameShutdownTimeInSeconds) {
-		this.gameShutdownTimeInSeconds = gameShutdownTimeInSeconds;
+	public void setSecondsToShutDown(int secondsToShutDown) {
+		this.secondsToShutDown = secondsToShutDown;
 	}
 }

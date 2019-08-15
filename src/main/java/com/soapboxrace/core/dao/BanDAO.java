@@ -19,6 +19,16 @@ public class BanDAO extends BaseDAO<BanEntity> {
 		this.entityManager = entityManager;
 	}
 
+	public BanEntity findByHWID(String hwid) {
+		TypedQuery<BanEntity> query = entityManager.createQuery("SELECT obj FROM BanEntity obj WHERE obj.data = :data AND (obj.willEnd = false OR obj.endsAt > :now)", BanEntity.class);
+		query.setParameter("data", hwid);
+		query.setParameter("now", LocalDateTime.now());
+
+		List<BanEntity> results = query.getResultList();
+
+		return results.isEmpty() ? null : results.get(results.size() - 1);
+	}
+
 	public BanEntity findByUser(UserEntity userEntity) {
 		TypedQuery<BanEntity> query = entityManager.createQuery("SELECT obj FROM BanEntity obj WHERE obj.userEntity = :user AND (obj.willEnd = false OR obj.endsAt > :now)", BanEntity.class);
 		query.setParameter("user", userEntity);

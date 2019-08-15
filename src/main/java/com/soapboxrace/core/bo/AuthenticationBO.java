@@ -18,4 +18,7 @@ public class AuthenticationBO {
 		return banDAO.findByUser(userEntity);
 	}
 
+	public BanEntity checkHWIDBan(String hwid) {
+		return banDAO.findByHWID(hwid);
+	}
 }
