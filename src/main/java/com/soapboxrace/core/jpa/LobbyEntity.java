@@ -14,8 +14,7 @@ import javax.persistence.*;
 @Table(name = "LOBBY")
 @NamedQueries({ //
 		@NamedQuery(name = "LobbyEntity.findAll", query = "SELECT obj FROM LobbyEntity obj"), //
-		@NamedQuery(name = "LobbyEntity.findAllOpen", //
-				query = "SELECT obj FROM LobbyEntity obj WHERE obj.startedTime between :dateTime1 and :dateTime2 "), //
+		@NamedQuery(name = "LobbyEntity.findAllOpen", query = "SELECT obj FROM LobbyEntity obj WHERE obj.startedTime between :dateTime1 and :dateTime2 "), //
 		@NamedQuery(name = "LobbyEntity.findAllOpenByCarClass", //
 				query = "SELECT obj FROM LobbyEntity obj " //
 						+ "WHERE obj.startedTime between :dateTime1 and :dateTime2 " //

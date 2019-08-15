@@ -14,12 +14,22 @@ import com.soapboxrace.core.api.util.Secured;
 import com.soapboxrace.core.bo.*;
 import com.soapboxrace.core.jpa.EventSessionEntity;
 import com.soapboxrace.core.jpa.PersonaEntity;
+import com.soapboxrace.core.jpa.EventEntity;
+import com.soapboxrace.core.jpa.LobbyEntity;
 import com.soapboxrace.jaxb.http.LobbyInfo;
 import com.soapboxrace.jaxb.http.OwnedCarTrans;
 import com.soapboxrace.jaxb.http.SecurityChallenge;
 import com.soapboxrace.jaxb.http.SessionInfo;
 
 import com.soapboxrace.core.dao.PersonaDAO;
+import com.soapboxrace.core.dao.EventDAO;
+import com.soapboxrace.core.dao.LobbyDAO;
+import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
+import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
+import com.soapboxrace.core.xmpp.XmppChat;
+import org.igniterealtime.restclient.entity.MUCRoomEntity;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/matchmaking")
 public class MatchMaking {
@@ -42,6 +52,19 @@ public class MatchMaking {
 	@EJB
     private PersonaDAO personaDAO;
 
+    @EJB
+    private LobbyDAO lobbyDAO;
+
+    @EJB
+    private EventDAO eventDAO;
+
+    @EJB
+    private OpenFireRestApiCli restApiCli;
+
+    @EJB
+    private OpenFireSoapBoxCli openFireSoapBoxCli;
+
+
 	@PUT
 	@Secured
 	@Path("/joinqueueracenow")
@@ -54,6 +77,7 @@ public class MatchMaking {
 		if(persona.getShadowBanned() == true) return "";
 
 		lobbyBO.joinFastLobby(activePersonaId, defaultCar.getCustomCar().getCarClassHash());
+
 		return "";
 	}
 
@@ -130,6 +154,31 @@ public class MatchMaking {
 	public LobbyInfo acceptInvite(@HeaderParam("securityToken") String securityToken, @QueryParam("lobbyInviteId") Long lobbyInviteId) {
 		Long activePersonaId = tokenSessionBO.getActivePersonaId(securityToken);
 		tokenSessionBO.setActiveLobbyId(securityToken, lobbyInviteId);
+
+		//lobbydata
+		LobbyEntity lobbyInformation = lobbyDAO.findById(lobbyInviteId);
+		if(activePersonaId == lobbyInformation.getPersonaId()) {
+			//eventname
+			EventEntity eventInformation = lobbyInformation.getEvent();
+			String eventNameFull = eventInformation.getName();
+			String eventName = eventNameFull.split("(")[0];
+
+			//personaname
+			PersonaEntity personaEntity = personaDAO.findById(activePersonaId);
+			
+			//now the hardest, send to all...
+			List<MUCRoomEntity> channels = restApiCli.getAllRooms().stream().filter(r -> r.getRoomName().startsWith("chan")).collect(Collectors.toList());
+            String message = XmppChat.createSystemMessage(personaEntity.getName() + " is looking for racers on " + eventName);
+
+            for (MUCRoomEntity channel : channels) {
+                List<Long> members = restApiCli.getAllOccupantsInRoom(channel.getRoomName());
+                
+                for (Long member : members) {
+                    openFireSoapBoxCli.send(message, member);
+                }
+            }
+        }
+
 		return lobbyBO.acceptinvite(activePersonaId, lobbyInviteId);
 	}
 
