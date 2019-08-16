@@ -24,13 +24,9 @@ import com.soapboxrace.jaxb.http.SessionInfo;
 import com.soapboxrace.core.dao.PersonaDAO;
 import com.soapboxrace.core.dao.EventDAO;
 import com.soapboxrace.core.dao.LobbyDAO;
-import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
-import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
-import com.soapboxrace.core.xmpp.XmppChat;
-import org.igniterealtime.restclient.entity.MUCRoomEntity;
-import java.util.List;
-import java.util.stream.Collectors;
+
 import com.soapboxrace.core.bo.util.DiscordWebhook;
+import com.soapboxrace.core.bo.util.SendToAllXMPP;
 
 
 @Path("/matchmaking")
@@ -63,14 +59,11 @@ public class MatchMaking {
     @EJB
     private EventDAO eventDAO;
 
-    @EJB
-    private OpenFireRestApiCli restApiCli;
-
-    @EJB
-    private OpenFireSoapBoxCli openFireSoapBoxCli;
-
 	@EJB
 	private DiscordWebhook discord;
+
+	@EJB
+	private SendToAllXMPP internalXmpp;
 
 	@PUT
 	@Secured
@@ -177,7 +170,7 @@ public class MatchMaking {
 			PersonaEntity personaEntity = personaDAO.findById(activePersonaId);
 			
 			//construct message
-			String msg = personaEntity.getName() + " is looking for racers on " + eventName;
+			String msg = "[" + personaEntity.getName() + "] is looking for racers on " + eventName;
 
 			//send to discord
 			if(parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_URL") != null) {
@@ -188,17 +181,7 @@ public class MatchMaking {
 			}
 
 			//now the hardest, send to all...
-			List<MUCRoomEntity> channels = restApiCli.getAllRooms().stream().collect(Collectors.toList());
-            String message = XmppChat.createSystemMessage(msg);
-
-            for (MUCRoomEntity channel : channels) {
-                List<Long> members = restApiCli.getAllOccupantsInRoom(channel.getRoomName());
-                
-                System.out.println(channel.getRoomName());
-                for (Long member : members) {
-                    openFireSoapBoxCli.send(message, member);
-                }
-            }
+			internalXmpp.sendMessage(msg, "channel.event");
         }
 
 		return lobbyBO.acceptinvite(activePersonaId, lobbyInviteId);
