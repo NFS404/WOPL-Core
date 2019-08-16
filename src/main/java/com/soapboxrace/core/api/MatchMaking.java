@@ -181,7 +181,7 @@ public class MatchMaking {
 			}
 
 			//now the hardest, send to all...
-			internalXmpp.sendMessage(msg, "channel.event");
+			internalXmpp.sendMessageToChannel(msg, "channel.event__1");
         }
 
 		return lobbyBO.acceptinvite(activePersonaId, lobbyInviteId);
