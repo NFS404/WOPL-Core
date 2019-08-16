@@ -66,9 +66,9 @@ public class AdminBO {
 					break;
 				}
 
+				internalXmpp.sendMessage(constructMsg.replace("%s", "banned"));
 				sendBan(personaEntity, personaDao.findById(personaId), commandInfo.timeEnd, commandInfo.reason);
 				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Banned user!"), personaId);
-				internalXmpp.sendMessage(constructMsg.replace("%s", "banned"));
 
 				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
 					discord.sendMessage(constructMsg.replace("%s", "banned"), 
@@ -79,9 +79,9 @@ public class AdminBO {
 						
 				break;
 			case KICK:
+				internalXmpp.sendMessage(constructMsg.replace("%s", "kicked"));
 				sendKick(personaEntity.getUser().getId(), personaEntity.getPersonaId());
 
-				internalXmpp.sendMessage(constructMsg.replace("%s", "kicked"));
 				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Kicked user!"), personaId);
 
 				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
