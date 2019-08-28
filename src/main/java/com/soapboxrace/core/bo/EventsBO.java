@@ -25,6 +25,9 @@ import com.soapboxrace.jaxb.http.LuckyDrawInfo;
 import com.soapboxrace.jaxb.http.TreasureHuntEventSession;
 import com.soapboxrace.jaxb.util.MarshalXML;
 
+import com.soapboxrace.core.engine.EngineException;
+import com.soapboxrace.core.engine.EngineExceptionCode;
+
 @Stateless
 public class EventsBO {
 
@@ -85,14 +88,32 @@ public class EventsBO {
 			treasureHuntEntity.setCoinsCollected(coins);
 			treasureHuntDao.update(treasureHuntEntity);
 		}
-		return coins == 32767 ? accolades(activePersonaId, false) : "";
+
+        LocalDate now = LocalDate.now();
+        LocalDate thDate = treasureHuntEntity.getThDate();
+
+        if (thDate.compareTo(now) > 0) {
+            throw new EngineException("TH is not ready", EngineExceptionCode.SecurityKickedArbitration);
+        }
+
+        int difference = coins - treasureHuntEntity.getCoinsCollected();
+
+        // coin difference should be exactly 1 (or 0)
+        if ((difference & (difference - 1)) != 0) {
+            throw new EngineException("Invalid coins", EngineExceptionCode.SecurityKickedArbitration);
+        }
+
+        treasureHuntEntity.setCoinsCollected(coins);
+        treasureHuntDao.update(treasureHuntEntity);
+
+        return coins == 32767 ? accolades(activePersonaId, false) : null;
 	}
 
 	public String accolades(Long activePersonaId, Boolean isBroken) {
 		TreasureHuntEntity treasureHuntEntity = treasureHuntDao.findById(activePersonaId);
-	if (isBroken && !treasureHuntEntity.getIsStreakBroken()) {
-		return MarshalXML.marshal(getTreasureHuntAccolades(activePersonaId, treasureHuntEntity));
-	}
+		if (isBroken && !treasureHuntEntity.getIsStreakBroken()) {
+			return MarshalXML.marshal(getTreasureHuntAccolades(activePersonaId, treasureHuntEntity));
+		}
 
 		if (isBroken) {
 			treasureHuntEntity.setStreak(1);
@@ -102,7 +123,8 @@ public class EventsBO {
 			treasureHuntEntity.setSeed(new Random().nextInt());
 		}
 
-		treasureHuntEntity.setThDate(LocalDate.now());
+		treasureHuntEntity.setCoinsCollected(0);
+		treasureHuntEntity.setThDate(LocalDate.now().plusDays(1));
 		treasureHuntDao.update(treasureHuntEntity);
 		
 		achievementsBO.update(personaDAO.findById(activePersonaId),
