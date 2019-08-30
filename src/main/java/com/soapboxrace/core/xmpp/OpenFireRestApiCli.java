@@ -6,6 +6,7 @@ import com.soapboxrace.core.dao.TokenSessionDAO;
 import org.igniterealtime.restclient.entity.*;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -49,7 +50,12 @@ public class OpenFireRestApiCli
 		}
 		createUpdatePersona("sbrw.engine.engine", openFireToken);
 
-		discord.sendMessage("Server is now up and running!");
+		if(!parameterBO.getBoolParam("IS_MAINTENANCE")) discord.sendMessage("Server is now up and running!");
+	}
+
+	@PreDestroy
+	public void terminate() {
+		discord.sendMessage("<@133384493493911552> i am literally about to crash!");
 	}
 
 	private Builder getBuilder(String path)

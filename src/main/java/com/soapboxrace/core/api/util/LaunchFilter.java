@@ -51,8 +51,6 @@ public class LaunchFilter implements ContainerRequestFilter {
 			String userAgent = requestContext.getHeaderString("User-Agent");
 			String gameLauncherHash = requestContext.getHeaderString("X-GameLauncherHash");
 
-			System.out.println(userAgent);
-
 			if ((userAgent == null || !userAgent.equals("GameLauncher (+https://github.com/SoapboxRaceWorld/GameLauncher_NFSW)"))
 					|| (hwid == null || hwid.trim().isEmpty()) || (gameLauncherHash == null || gameLauncherHash.trim().isEmpty())) {
 				LoginStatusVO loginStatusVO = new LoginStatusVO(0L, "", false);
@@ -62,6 +60,19 @@ public class LaunchFilter implements ContainerRequestFilter {
 
 				return;
 			}
+
+			//disable electron aswell
+			try {
+				String userAgent2 = requestContext.getHeaderString("X-User-Agent");
+				if ((userAgent2 != null || userAgent2.startsWith("electron"))) {
+					LoginStatusVO loginStatusVO = new LoginStatusVO(0L, "", false);
+					loginStatusVO.setDescription("Please use MeTonaTOR's launcher. Or, are you tampering?");
+
+					requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(loginStatusVO).build());
+
+					return;
+				}
+			} catch(Exception x) {}
 		}
 	}
 

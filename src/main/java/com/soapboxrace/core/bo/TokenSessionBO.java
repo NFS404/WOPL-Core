@@ -176,8 +176,10 @@ public class TokenSessionBO {
 						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
 
 						if(httpRequest.getHeader("X-UserAgent") == null) {
+							System.out.println("1" + httpRequest.getHeader("X-User-Agent"));
 							userEntity.setUA(httpRequest.getHeader("X-User-Agent"));
 						} else {
+							System.out.println("2" + httpRequest.getHeader("X-UserAgent"));
 							userEntity.setUA(httpRequest.getHeader("X-UserAgent"));
 						}
 
