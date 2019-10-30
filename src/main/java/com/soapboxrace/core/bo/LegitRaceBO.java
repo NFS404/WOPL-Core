@@ -37,7 +37,6 @@ public class LegitRaceBO {
 
 	public boolean isLegit(Long activePersonaId, ArbitrationPacket arbitrationPacket, EventSessionEntity sessionEntity) {
 		int minimumTime = 0;
-		boolean quitted_event = false;
 
 		if (arbitrationPacket instanceof PursuitArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("PURSUIT_MINIMUM_TIME");
@@ -45,7 +44,6 @@ public class LegitRaceBO {
 			minimumTime = parameterBO.getIntParam("ROUTE_MINIMUM_TIME");
 		} else if (arbitrationPacket instanceof TeamEscapeArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("TE_MINIMUM_TIME");
-			quitted_event = arbitrationPacket.getFinishReason() == EventFinishReason.ABORTED.getValue();
 		} else if (arbitrationPacket instanceof DragArbitrationPacket) {
 			minimumTime = parameterBO.getIntParam("DRAG_MINIMUM_TIME");
 		}
@@ -53,22 +51,8 @@ public class LegitRaceBO {
 		final long timeDiff = sessionEntity.getEnded() - sessionEntity.getStarted();
 		boolean legit = timeDiff > minimumTime + 1;
 
-		if (!legit && !quitted_event) {
-			//SHADOWBAN THAT USER!
-			PersonaEntity persona = personaDAO.findById(activePersonaId);
-
-			if(persona.getShadowBanned() == false) {
-				persona.setShadowBanned(true);
-				personaDAO.update(persona);
-
-			    Date date = new Date(timeDiff);
-			    SimpleDateFormat formatter = new SimpleDateFormat("mm:ss.SSS");
-			    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-			    String formatted = formatter.format(date);
-
-				socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d. User is ShadowBanned", formatted), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
-				adminBo.sendKick(persona.getUser().getId(), activePersonaId);
-			}
+		if (!legit) {
+			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d", timeDiff), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
 		}
 
 		if (arbitrationPacket.getHacksDetected() != 0 && arbitrationPacket.getHacksDetected() != 32) {

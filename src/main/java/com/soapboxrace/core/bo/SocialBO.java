@@ -41,7 +41,7 @@ public class SocialBO {
 			PersonaEntity personaEntity = personaDao.findById(abuserPersonaId);
 			PersonaEntity personaEntity1 = personaDao.findById(personaId);
 
-			discord.sendMessage("**" + personaEntity.getName() + " ]** has been reported by **" + personaEntity1.getName() + "**. Reason: _" + description + "_", 
+			discord.sendMessage("**" + personaEntity.getName() + "** has been reported by **" + personaEntity1.getName() + "**. Reason: _" + description + "_", 
 				parameterBO.getStrParam("DISCORD_WEBHOOK_REPORT_URL"), 
 				parameterBO.getStrParam("DISCORD_WEBHOOK_REPORT_NAME", "Botte"),
 				0xff9900

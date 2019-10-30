@@ -3,6 +3,8 @@ package com.soapboxrace.core.bo.util;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import java.util.*; 
+
 import com.soapboxrace.core.bo.ParameterBO;
 
 import com.mrpowergamerbr.temmiewebhook.DiscordEmbed;
@@ -20,7 +22,7 @@ public class DiscordWebhook {
 
 		DiscordEmbed de = DiscordEmbed.builder().description(message).color(color).build();
 
-		DiscordMessage dm = DiscordMessage.builder().username(botName).content().embeds(Arrays.asList(de)).build();
+		DiscordMessage dm = DiscordMessage.builder().username(botName).embeds(Arrays.asList(de)).build();
 		temmie.sendMessage(dm);
 	}
 
