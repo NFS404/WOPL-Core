@@ -57,6 +57,7 @@ public class AdminBO {
 			return;
 
 		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ " + personaEntity1.getName() + " ].";
+		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **" + personaEntity1.getName() + "**";
 
 		switch (commandInfo.action)
 		{
@@ -71,9 +72,10 @@ public class AdminBO {
 				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Banned user!"), personaId);
 
 				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
-					discord.sendMessage(constructMsg.replace("%s", "banned"), 
+					discord.sendMessage(constructMsg_ds.replace("%s", "banned"), 
 						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
-						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte")
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0xff0000
 					);
 				}
 						
@@ -85,9 +87,10 @@ public class AdminBO {
 				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Kicked user!"), personaId);
 
 				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
-					discord.sendMessage(constructMsg.replace("%s", "kicked"), 
+					discord.sendMessage(constructMsg_ds.replace("%s", "kicked"), 
 						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
-						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte")
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0xfff200
 					);
 				}
 
@@ -102,9 +105,10 @@ public class AdminBO {
 				internalXmpp.sendMessage(constructMsg.replace("%s", "unbanned"));
 
 				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
-					discord.sendMessage(constructMsg.replace("%s", "unbanned"), 
+					discord.sendMessage(constructMsg_ds.replace("%s", "unbanned"), 
 						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
-						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte")
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0x1aff00
 					);
 				}
 

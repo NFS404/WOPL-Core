@@ -15,17 +15,20 @@ public class DiscordWebhook {
 	@EJB
 	private ParameterBO parameterBO;
 
-	public void sendMessage(String message, String webHookUrl, String botName) {
+	public void sendMessage(String message, String webHookUrl, String botName, int color) {
 		TemmieWebhook temmie = new TemmieWebhook(webHookUrl);
-		DiscordMessage dm = DiscordMessage.builder().username(botName).content(message).build();
+
+		DiscordEmbed de = DiscordEmbed.builder().description(message).color(color).build();
+
+		DiscordMessage dm = DiscordMessage.builder().username(botName).content().embeds(Arrays.asList(de)).build();
 		temmie.sendMessage(dm);
 	}
 
-	public void sendMessage(String message, String webHookUrl) {
-		sendMessage(message, webHookUrl, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"));
+	public void sendMessage(String message, String webHookUrl, int color) {
+		sendMessage(message, webHookUrl, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"), color);
 	}
 
-	public void sendMessage(String message) {
-		sendMessage(message, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTURL"), parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"));
+	public void sendMessage(String message, int color) {
+		sendMessage(message, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTURL"), parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"), color);
 	}
 }

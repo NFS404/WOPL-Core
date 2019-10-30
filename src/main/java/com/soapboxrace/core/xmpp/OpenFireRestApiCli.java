@@ -50,12 +50,12 @@ public class OpenFireRestApiCli
 		}
 		createUpdatePersona("sbrw.engine.engine", openFireToken);
 
-		if(!parameterBO.getBoolParam("IS_MAINTENANCE")) discord.sendMessage("Server is now up and running!");
+		discord.sendMessage("Server is now up and running!", 0x00ff00);
 	}
 
 	@PreDestroy
 	public void terminate() {
-		discord.sendMessage("<@133384493493911552> i am literally about to crash!");
+		discord.sendMessage("i am literally about to crash!", 0xff0000);
 	}
 
 	private Builder getBuilder(String path)

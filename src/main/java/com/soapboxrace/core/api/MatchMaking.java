@@ -171,12 +171,14 @@ public class MatchMaking {
 			
 			//construct message
 			String msg = "[" + personaEntity.getName() + "] is looking for racers on " + eventName;
+			String msg_ds = "**" + personaEntity.getName() + "** is looking for racers on **" + eventName + "**";
 
 			//send to discord
 			if(parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_URL") != null) {
-				discord.sendMessage(msg, 
+				discord.sendMessage(msg_ds, 
 					parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_URL"), 
-					parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_NAME", "Botte")
+					parameterBO.getStrParam("DISCORD_WEBHOOK_LOBBY_NAME", "Botte"),
+					0xbb00ff
 				);
 			}
 
