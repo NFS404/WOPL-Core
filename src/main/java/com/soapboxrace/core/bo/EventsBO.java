@@ -25,9 +25,6 @@ import com.soapboxrace.jaxb.http.LuckyDrawInfo;
 import com.soapboxrace.jaxb.http.TreasureHuntEventSession;
 import com.soapboxrace.jaxb.util.MarshalXML;
 
-import com.soapboxrace.core.engine.EngineException;
-import com.soapboxrace.core.engine.EngineExceptionCode;
-
 @Stateless
 public class EventsBO {
 
@@ -46,6 +43,15 @@ public class EventsBO {
     @EJB
     private ParameterBO parameterBO;
 
+    @EJB
+    private AchievementDAO achievementDAO;
+
+    @EJB
+    private PersonaDAO personaDAO;
+
+    @EJB
+    private AchievementsBO achievementsBO;
+
     public TreasureHuntEventSession getTreasureHuntEventSession(Long activePersonaId) {
         TreasureHuntEntity treasureHuntEntity = treasureHuntDao.findById(activePersonaId);
         if (treasureHuntEntity == null) {
@@ -55,12 +61,8 @@ public class EventsBO {
 
         LocalDate thDate = treasureHuntEntity.getThDate();
         LocalDate nowDate = LocalDate.now();
-
-        System.out.println(thDate.compareTo(nowDate));
-        System.out.println(thDate.equals(nowDate));
-
         if (!thDate.equals(nowDate)) {
-            int days = (int) ChronoUnit.DAYS.between(thDate, nowDate);
+            Integer days = (int) ChronoUnit.DAYS.between(thDate, nowDate);
             if (days >= 2 || treasureHuntEntity.getCoinsCollected() != 32767) {
                 return createNewTreasureHunt(treasureHuntEntity, true);
             } else {
@@ -68,10 +70,6 @@ public class EventsBO {
             }
         }
 
-        return getTreasureHuntEventSession(treasureHuntEntity);
-    }
-
-    private TreasureHuntEventSession getTreasureHuntEventSession(TreasureHuntEntity treasureHuntEntity) {
         TreasureHuntEventSession treasureHuntEventSession = new TreasureHuntEventSession();
         treasureHuntEventSession.setCoinsCollected(treasureHuntEntity.getCoinsCollected());
         treasureHuntEventSession.setIsStreakBroken(treasureHuntEntity.getIsStreakBroken());
@@ -84,40 +82,34 @@ public class EventsBO {
     public String notifyCoinCollected(Long activePersonaId, Integer coins) {
         TreasureHuntEntity treasureHuntEntity = treasureHuntDao.findById(activePersonaId);
         if (treasureHuntEntity != null) {
-            if (treasureHuntEntity.getCoinsCollected()==32767) {
-                throw new EngineException("TH is not ready", EngineExceptionCode.SecurityKickedArbitration);
-            }
-
-            int difference = coins - treasureHuntEntity.getCoinsCollected();
-
-            // coin difference should be exactly 1 (or 0)
-            if ((difference & (difference - 1)) != 0) {
-                throw new EngineException("Invalid coins", EngineExceptionCode.SecurityKickedArbitration);
-            }
-
             treasureHuntEntity.setCoinsCollected(coins);
             treasureHuntDao.update(treasureHuntEntity);
-
-            return coins == 32767 ? accolades(activePersonaId, false) : null;
         }
-
-        return null;
+        return coins == 32767 ? accolades(activePersonaId, false) : "";
     }
 
     public String accolades(Long activePersonaId, Boolean isBroken) {
         TreasureHuntEntity treasureHuntEntity = treasureHuntDao.findById(activePersonaId);
+    if (isBroken && !treasureHuntEntity.getIsStreakBroken()) {
+        return MarshalXML.marshal(getTreasureHuntAccolades(activePersonaId, treasureHuntEntity));
+    }
 
         if (isBroken) {
             treasureHuntEntity.setStreak(1);
             treasureHuntEntity.setIsStreakBroken(false);
         } else {
             treasureHuntEntity.setStreak(treasureHuntEntity.getStreak() + 1);
+            treasureHuntEntity.setSeed(new Random().nextInt());
         }
 
         treasureHuntEntity.setThDate(LocalDate.now());
         treasureHuntDao.update(treasureHuntEntity);
+        
+        achievementsBO.update(personaDAO.findById(activePersonaId),
+                achievementDAO.findByName("achievement_ACH_COMPLETE_TH"),
+                1L);
 
-		return MarshalXML.marshal(getTreasureHuntAccolades(activePersonaId, treasureHuntEntity));
+        return MarshalXML.marshal(getTreasureHuntAccolades(activePersonaId, treasureHuntEntity));
     }
 
     private TreasureHuntEventSession createNewTreasureHunt(TreasureHuntEntity treasureHuntEntity, Boolean isBroken) {
@@ -127,71 +119,77 @@ public class EventsBO {
         treasureHuntEntity.setThDate(LocalDate.now());
         treasureHuntDao.update(treasureHuntEntity);
 
-        return getTreasureHuntEventSession(treasureHuntEntity);
+        TreasureHuntEventSession treasureHuntEventSession = new TreasureHuntEventSession();
+        treasureHuntEventSession.setCoinsCollected(treasureHuntEntity.getCoinsCollected());
+        treasureHuntEventSession.setIsStreakBroken(treasureHuntEntity.getIsStreakBroken());
+        treasureHuntEventSession.setNumCoins(treasureHuntEntity.getNumCoins());
+        treasureHuntEventSession.setSeed(treasureHuntEntity.getSeed());
+        treasureHuntEventSession.setStreak(treasureHuntEntity.getStreak());
+        return treasureHuntEventSession;
     }
 
-	private Accolades getTreasureHuntAccolades(Long activePersonaId, TreasureHuntEntity treasureHuntEntity) {
-		PersonaEntity personaEntity = personaDao.findById(activePersonaId);
+    private Accolades getTreasureHuntAccolades(Long activePersonaId, TreasureHuntEntity treasureHuntEntity) {
+        PersonaEntity personaEntity = personaDao.findById(activePersonaId);
 
-		RewardVO rewardVO = rewardBO.getRewardVO(personaEntity);
+        RewardVO rewardVO = rewardBO.getRewardVO(personaEntity);
 
-		float baseRepTh = parameterBO.getFloatParam("TH_BASE_REP");
-		float baseCashTh = parameterBO.getFloatParam("TH_BASE_CASH");
+        float baseRepTh = parameterBO.getFloatParam("TH_BASE_REP");
+        float baseCashTh = parameterBO.getFloatParam("TH_BASE_CASH");
 
-		float playerLevelRepConst = rewardBO.getPlayerLevelConst(personaEntity.getLevel(), baseRepTh);
-		float playerLevelCashConst = rewardBO.getPlayerLevelConst(personaEntity.getLevel(), baseCashTh);
+        float playerLevelRepConst = rewardBO.getPlayerLevelConst(personaEntity.getLevel(), baseRepTh);
+        float playerLevelCashConst = rewardBO.getPlayerLevelConst(personaEntity.getLevel(), baseCashTh);
 
-		float repThMultiplier = parameterBO.getFloatParam("TH_REP_MULTIPLIER");
-		float cashThMultiplier = parameterBO.getFloatParam("TH_CASH_MULTIPLIER");
+        float repThMultiplier = parameterBO.getFloatParam("TH_REP_MULTIPLIER");
+        float cashThMultiplier = parameterBO.getFloatParam("TH_CASH_MULTIPLIER");
 
-		Float baseRep = playerLevelRepConst * repThMultiplier;
-		Float baseCash = playerLevelCashConst * cashThMultiplier;
+        Float baseRep = playerLevelRepConst * repThMultiplier;
+        Float baseCash = playerLevelCashConst * cashThMultiplier;
 
-		rewardVO.setBaseRep(baseRep.intValue());
-		rewardVO.setBaseCash(baseCash.intValue());
+        rewardVO.setBaseRep(baseRep.intValue());
+        rewardVO.setBaseCash(baseCash.intValue());
 
-		float repDayMultiplier = parameterBO.getFloatParam("TH_REP_MULTIPLIER");
-		float cashDayMultiplier = parameterBO.getFloatParam("TH_DAY_CASH_MULTIPLIER");
+        float repDayMultiplier = parameterBO.getFloatParam("TH_REP_MULTIPLIER");
+        float cashDayMultiplier = parameterBO.getFloatParam("TH_DAY_CASH_MULTIPLIER");
 
-		Float dayRep = baseRep + (repDayMultiplier * treasureHuntEntity.getStreak());
-		Float dayCash = baseCash + (cashDayMultiplier * treasureHuntEntity.getStreak());
+        Float dayRep = baseRep + (repDayMultiplier * treasureHuntEntity.getStreak());
+        Float dayCash = baseCash + (cashDayMultiplier * treasureHuntEntity.getStreak());
 
-		rewardVO.add(dayRep.intValue(), dayCash.intValue(), EnumRewardCategory.BASE, EnumRewardType.NONE);
-		rewardBO.setSkillMultiplierReward(personaEntity, rewardVO, SkillModRewardType.EXPLORER);
+        rewardVO.add(dayRep.intValue(), dayCash.intValue(), EnumRewardCategory.BASE, EnumRewardType.NONE);
+        rewardBO.setSkillMultiplierReward(personaEntity, rewardVO, SkillModRewardType.EXPLORER);
 
-		ArbitrationPacket arbitrationPacket = new ArbitrationPacket();
-		arbitrationPacket.setRank(1);
-		if (!treasureHuntEntity.getIsStreakBroken()) {
-			rewardBO.applyRaceReward(rewardVO.getRep(), rewardVO.getCash(), personaEntity);
-		}
-		Accolades accolades = rewardBO.getAccolades(personaEntity, arbitrationPacket, rewardVO);
-		accolades.setLuckyDrawInfo(getLuckyDrawInfo(treasureHuntEntity));
+        ArbitrationPacket arbitrationPacket = new ArbitrationPacket();
+        arbitrationPacket.setRank(1);
+        if (!treasureHuntEntity.getIsStreakBroken()) {
+            rewardBO.applyRaceReward(rewardVO.getRep(), rewardVO.getCash(), personaEntity);
+        }
+        Accolades accolades = rewardBO.getAccolades(personaEntity, arbitrationPacket, rewardVO);
+        accolades.setLuckyDrawInfo(getLuckyDrawInfo(treasureHuntEntity));
 
-		return accolades;
-	}
+        return accolades;
+    }
 
-	private LuckyDrawInfo getLuckyDrawInfo(TreasureHuntEntity treasureHuntEntity) {
-		ArrayOfLuckyDrawItem arrayOfLuckyDrawItem = new ArrayOfLuckyDrawItem();
-		arrayOfLuckyDrawItem.getLuckyDrawItem().add(rewardBO.getItemFromProduct(personaDao.findById(treasureHuntEntity.getPersonaId())));
+    private LuckyDrawInfo getLuckyDrawInfo(TreasureHuntEntity treasureHuntEntity) {
+        ArrayOfLuckyDrawItem arrayOfLuckyDrawItem = new ArrayOfLuckyDrawItem();
+        arrayOfLuckyDrawItem.getLuckyDrawItem().add(rewardBO.getItemFromProduct(personaDao.findById(treasureHuntEntity.getPersonaId())));
 
-		ArrayOfLuckyDrawBox arrayOfLuckyDrawBox = new ArrayOfLuckyDrawBox();
-		LuckyDrawBox luckyDrawBox = new LuckyDrawBox();
-		luckyDrawBox.setIsValid(true);
-		luckyDrawBox.setLocalizationString("LD_CARD_SILVER");
-		luckyDrawBox.setLuckyDrawSetCategoryId(1);
-		arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
-		arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
-		arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
-		arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
-		arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
+        ArrayOfLuckyDrawBox arrayOfLuckyDrawBox = new ArrayOfLuckyDrawBox();
+        LuckyDrawBox luckyDrawBox = new LuckyDrawBox();
+        luckyDrawBox.setIsValid(true);
+        luckyDrawBox.setLocalizationString("LD_CARD_SILVER");
+        luckyDrawBox.setLuckyDrawSetCategoryId(1);
+        arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
+        arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
+        arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
+        arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
+        arrayOfLuckyDrawBox.getLuckyDrawBox().add(luckyDrawBox);
 
-		LuckyDrawInfo luckyDrawInfo = new LuckyDrawInfo();
-		luckyDrawInfo.setBoxes(arrayOfLuckyDrawBox);
-		luckyDrawInfo.setCurrentStreak(treasureHuntEntity.getStreak() > 1 ? (treasureHuntEntity.getStreak() - 1) : 1);
-		luckyDrawInfo.setIsStreakBroken(treasureHuntEntity.getIsStreakBroken());
-		luckyDrawInfo.setItems(arrayOfLuckyDrawItem);
-		luckyDrawInfo.setNumBoxAnimations(180);
-		return luckyDrawInfo;
-	}
+        LuckyDrawInfo luckyDrawInfo = new LuckyDrawInfo();
+        luckyDrawInfo.setBoxes(arrayOfLuckyDrawBox);
+        luckyDrawInfo.setCurrentStreak(treasureHuntEntity.getStreak() > 1 ? (treasureHuntEntity.getStreak() - 1) : 1);
+        luckyDrawInfo.setIsStreakBroken(treasureHuntEntity.getIsStreakBroken());
+        luckyDrawInfo.setItems(arrayOfLuckyDrawItem);
+        luckyDrawInfo.setNumBoxAnimations(180);
+        return luckyDrawInfo;
+    }
 
 }
