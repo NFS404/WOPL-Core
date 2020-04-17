@@ -43,20 +43,24 @@ public class Session {
 	@Path("/GetChatInfo")
 	@Produces(MediaType.APPLICATION_XML)
 	public ChatServer getChatInfo(@HeaderParam("securityToken") String securityToken) {
+		
 		ChatServer chatServer = new ChatServer();
 		String xmppIp = parameterBO.getStrParam("XMPP_IP");
+
 		if ("127.0.0.1".equals(parameterBO.getStrParam("XMPP_IP"))) {
 			URI myUri = uri.getBaseUri();
 			xmppIp = myUri.getHost();
 		}
-		chatServer.setIp(xmppIp);
 
+		chatServer.setIp(xmppIp);
+		chatServer.setPort(parameterBO.getIntParam("XMPP_PORT"));
 
 		PersonaEntity persona = personaDAO.findById(tokenSessionBO.getActivePersonaId(securityToken));
-		if(persona.getShadowBanned() == true) {
-			chatServer.setPort(5322);
-		} else {
-			chatServer.setPort(parameterBO.getIntParam("XMPP_PORT"));	
+
+		if (persona != null) {
+			if (persona.getShadowBanned() == true) {
+				chatServer.setPort(5322);
+			}
 		}
 
 		chatServer.setPrefix("sbrw");

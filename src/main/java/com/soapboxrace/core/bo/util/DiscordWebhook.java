@@ -27,10 +27,10 @@ public class DiscordWebhook {
 	}
 
 	public void sendMessage(String message, String webHookUrl, int color) {
-		sendMessage(message, webHookUrl, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"), color);
+		sendMessage(message, webHookUrl, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULT_NAME"), color);
 	}
 
 	public void sendMessage(String message, int color) {
-		sendMessage(message, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTURL"), parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULTNAME"), color);
+		sendMessage(message, parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULT_URL"), parameterBO.getStrParam("DISCORD_WEBHOOK_DEFAULT_NAME"), color);
 	}
 }

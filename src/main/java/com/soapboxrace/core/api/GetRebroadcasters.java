@@ -43,10 +43,12 @@ public class GetRebroadcasters {
 		ArrayOfUdpRelayInfo arrayOfUdpRelayInfo = new ArrayOfUdpRelayInfo();
 		UdpRelayInfo udpRelayInfo = new UdpRelayInfo();
 
-		String freeroamIp = "127.0.0.1";
+		String freeroamIp = parameterBO.getStrParam("UDP_FREEROAM_IP");
 
-		if(persona.getShadowBanned() != true) {
-			freeroamIp = parameterBO.getStrParam("UDP_FREEROAM_IP");
+		if (persona != null) {
+			if (persona.getShadowBanned() == true) {
+				freeroamIp = "127.0.0.1";
+			}
 		}
 
 		if ("127.0.0.1".equals(freeroamIp)) {
