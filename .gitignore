@@ -3,7 +3,7 @@ out/
 *.iml
 /.gradle/
 /.vscode/
-.vscode/settings.json
+/.vscode/settings.json
 /bin/
 /.project
 /gradlew
