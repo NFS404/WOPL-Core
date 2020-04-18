@@ -96,11 +96,6 @@ public class Event {
 		case PURSUIT_MP:
 			TeamEscapeArbitrationPacket teamEscapeArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, TeamEscapeArbitrationPacket.class);
 
-			if(teamEscapeArbitrationPacket.getCopsDeployed() >= teamEscapeArbitrationPacket.getCopsDisabled()) {
-				socialBo.sendReport(0L, activePersonaId, 3, "SilverAngel Hacks Detected.", (int) teamEscapeArbitrationPacket.getCarId(), 0,
-					teamEscapeArbitrationPacket.getHacksDetected());
-			}
-
 			return eventResultBO.handleTeamEscapeEnd(eventSessionEntity, activePersonaId, teamEscapeArbitrationPacket);
 		case PURSUIT_SP:
 			PursuitArbitrationPacket pursuitArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, PursuitArbitrationPacket.class);
