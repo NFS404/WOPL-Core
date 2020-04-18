@@ -68,8 +68,8 @@ public class LegitRaceBO {
 			TeamEscapeArbitrationPacket teamEscapeArbitrationPacket = (TeamEscapeArbitrationPacket)arbitrationPacket;
 
 			if(teamEscapeArbitrationPacket.getFinishReason() != 8202) {
-				if(teamEscapeArbitrationPacket.getCopsDeployed() >= teamEscapeArbitrationPacket.getCopsDisabled()) {
-					socialBo.sendReport(0L, activePersonaId, 3, "[IAC] copsDisabled is higher than copsDeployed!", (int) teamEscapeArbitrationPacket.getCarId(), 0,
+				if(teamEscapeArbitrationPacket.getCopsDisabled() >= teamEscapeArbitrationPacket.getCopsDeployed()) {
+					socialBo.sendReport(0L, activePersonaId, 3, "[IAC] copsDisabled("+teamEscapeArbitrationPacket.getCopsDisabled()+") is higher than copsDeployed("+teamEscapeArbitrationPacket.getCopsDeployed()+")!", (int) teamEscapeArbitrationPacket.getCarId(), 0,
 						teamEscapeArbitrationPacket.getHacksDetected());
 				}
 			}
