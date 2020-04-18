@@ -11,6 +11,8 @@ import com.soapboxrace.core.dao.*;
 import com.soapboxrace.core.jpa.*;
 import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
 import com.soapboxrace.jaxb.http.*;
+import com.soapboxrace.core.engine.EngineException;
+import com.soapboxrace.core.engine.EngineExceptionCode;
 
 @Stateless
 public class DriverPersonaBO {
@@ -175,11 +177,7 @@ public class DriverPersonaBO {
 			personaPresence.setUserId(personaEntity.getUser().getId());
 			return personaPresence;
 		}
-		PersonaPresence personaPresence = new PersonaPresence();
-		personaPresence.setPersonaId(0);
-		personaPresence.setPresence(0);
-		personaPresence.setUserId(0);
-		return personaPresence;
+		throw new EngineException(EngineExceptionCode.PersonaNotFound);
 	}
 
 	public void updateStatusMessage(String message, Long personaId) {

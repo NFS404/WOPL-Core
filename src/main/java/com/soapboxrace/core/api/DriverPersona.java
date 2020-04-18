@@ -38,7 +38,7 @@ public class DriverPersona
 	private final Pattern NAME_PATTERN = Pattern.compile("^[A-Z0-9]{3,15}$");
 
 	@EJB
-	private DriverPersonaBO bo;
+	private DriverPersonaBO driverPersonaBO;
 
 	@EJB
 	private UserBO userBo;
@@ -64,7 +64,7 @@ public class DriverPersona
 	@Produces(MediaType.APPLICATION_XML)
 	public ArrayOfInt getExpLevelPointsMap()
 	{
-		return bo.getExpLevelPointsMap();
+		return driverPersonaBO.getExpLevelPointsMap();
 	}
 
 	@GET
@@ -73,7 +73,7 @@ public class DriverPersona
 	@Produces(MediaType.APPLICATION_XML)
 	public ProfileData getPersonaInfo(@QueryParam("personaId") Long personaId)
 	{
-		return bo.getPersonaInfo(personaId);
+		return driverPersonaBO.getPersonaInfo(personaId);
 	}
 
 	@POST
@@ -82,7 +82,7 @@ public class DriverPersona
 	@Produces(MediaType.APPLICATION_XML)
 	public ArrayOfString reserveName(@QueryParam("name") String name)
 	{
-		return bo.reserveName(name);
+		return driverPersonaBO.reserveName(name);
 	}
 
 	@POST
@@ -111,7 +111,7 @@ public class DriverPersona
 			return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Invalid iconIndex").build();
 		}
 
-		ArrayOfString nameReserveResult = bo.reserveName(name);
+		ArrayOfString nameReserveResult = driverPersonaBO.reserveName(name);
 
 		if (!nameReserveResult.getString().isEmpty())
 		{
@@ -121,7 +121,7 @@ public class DriverPersona
 		PersonaEntity personaEntity = new PersonaEntity();
 		personaEntity.setName(name);
 		personaEntity.setIconIndex(iconIndex);
-		ProfileData persona = bo.createPersona(userId, personaEntity);
+		ProfileData persona = driverPersonaBO.createPersona(userId, personaEntity);
 
 		if (persona == null)
 		{
@@ -140,7 +140,7 @@ public class DriverPersona
 	public String deletePersona(@QueryParam("personaId") Long personaId, @HeaderParam("securityToken") String securityToken)
 	{
 		tokenSessionBo.verifyPersona(securityToken, personaId);
-		bo.deletePersona(personaId);
+		driverPersonaBO.deletePersona(personaId);
 		return "<long>0</long>";
 	}
 
@@ -151,7 +151,7 @@ public class DriverPersona
 	{
 		PersonaIdArray personaIdArray = UnmarshalXML.unMarshal(is, PersonaIdArray.class);
 		ArrayOfLong personaIds = personaIdArray.getPersonaIds();
-		return bo.getPersonaBaseFromList(personaIds.getLong());
+		return driverPersonaBO.getPersonaBaseFromList(personaIds.getLong());
 	}
 
 	@POST
@@ -197,14 +197,9 @@ public class DriverPersona
 	@Secured
 	@Path("/GetPersonaPresenceByName")
 	@Produces(MediaType.APPLICATION_XML)
-	public String getPersonaPresenceByName(@QueryParam("displayName") String displayName)
+	public PersonaPresence getPersonaPresenceByName(@QueryParam("displayName") String displayName)
 	{
-		PersonaPresence personaPresenceByName = bo.getPersonaPresenceByName(displayName);
-		if (personaPresenceByName.getPersonaId() == 0)
-		{
-			return "";
-		}
-		return MarshalXML.marshal(personaPresenceByName);
+		return driverPersonaBO.getPersonaPresenceByName(displayName);
 	}
 
 	@POST
@@ -216,7 +211,7 @@ public class DriverPersona
 		PersonaMotto personaMotto = UnmarshalXML.unMarshal(statusXml, PersonaMotto.class);
 		tokenSessionBo.verifyPersona(securityToken, personaMotto.getPersonaId());
 
-		bo.updateStatusMessage(personaMotto.getMessage(), personaMotto.getPersonaId());
+		driverPersonaBO.updateStatusMessage(personaMotto.getMessage(), personaMotto.getPersonaId());
 		return personaMotto;
 	}
 }
