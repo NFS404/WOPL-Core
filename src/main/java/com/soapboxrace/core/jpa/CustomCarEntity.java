@@ -1,18 +1,10 @@
 package com.soapboxrace.core.jpa;
 
-import java.util.List;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "CUSTOMCAR")
@@ -38,18 +30,23 @@ public class CustomCarEntity {
 	private OwnedCarEntity ownedCar;
 
 	@OneToMany(mappedBy = "customCar", targetEntity = PaintEntity.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<PaintEntity> paints;
 
 	@OneToMany(mappedBy = "customCar", targetEntity = PerformancePartEntity.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<PerformancePartEntity> performanceParts;
 
 	@OneToMany(mappedBy = "customCar", targetEntity = SkillModPartEntity.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<SkillModPartEntity> skillModParts;
 
 	@OneToMany(mappedBy = "customCar", targetEntity = VinylEntity.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<VinylEntity> vinyls;
 
 	@OneToMany(mappedBy = "customCar", targetEntity = VisualPartEntity.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<VisualPartEntity> visualParts;
 
 	public Long getId() {
