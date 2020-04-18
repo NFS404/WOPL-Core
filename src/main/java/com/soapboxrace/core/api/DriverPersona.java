@@ -106,6 +106,10 @@ public class DriverPersona
 			return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Invalid name. Can only contain A-Z, 0-9, and can be between 3 and 15 characters.")
 					.build();
 		}
+		
+		if (iconIndex < 0 || iconIndex > 25) {
+			return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Invalid iconIndex").build();
+		}
 
 		ArrayOfString nameReserveResult = bo.reserveName(name);
 
