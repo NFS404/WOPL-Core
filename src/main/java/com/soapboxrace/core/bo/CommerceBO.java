@@ -313,7 +313,7 @@ public class CommerceBO {
 			float cash = (float) persona.getCash();
 			float boost = (float) persona.getBoost();
 			persona.setCash(Float.sum(cash, result));
-			//persona.setBoost(Float.sum(boost, result));
+			persona.setBoost(Float.sum(boost, result));
 			personaDAO.update(persona);
 		}
 	}

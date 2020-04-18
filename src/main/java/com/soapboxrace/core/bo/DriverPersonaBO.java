@@ -8,6 +8,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import com.soapboxrace.core.dao.*;
+import com.soapboxrace.core.engine.EngineException;
+import com.soapboxrace.core.engine.EngineExceptionCode;
 import com.soapboxrace.core.jpa.*;
 import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
 import com.soapboxrace.jaxb.http.*;
@@ -60,9 +62,13 @@ public class DriverPersonaBO {
 	public ProfileData createPersona(Long userId, PersonaEntity personaEntity) {
 		UserEntity userEntity = userDao.findById(userId);
 
-		if (userEntity.getListOfProfile().size() >= 5) {
-			return null;
-		}
+        if (userEntity.getListOfProfile().size() >= parameterBO.getIntParam("MAX_PROFILES", 3)) {
+            throw new EngineException(EngineExceptionCode.MaximumNumberOfPersonasForUserReached, false);
+        }
+
+        if (personaEntity.getIconIndex() < 0 || personaEntity.getIconIndex() > parameterBO.getIntParam("MAX_ICON_INDEX", 26)) {
+            throw new EngineException(EngineExceptionCode.InvalidOperation, false);
+        }
 
 		personaEntity.setUser(userEntity);
 		personaEntity.setCash(parameterBO.getIntParam("STARTING_CASH_AMOUNT"));
@@ -79,7 +85,6 @@ public class DriverPersonaBO {
 
 	private ProfileData castPersonaEntity(PersonaEntity personaEntity) {
 		ProfileData profileData = new ProfileData();
-		// switch to apache beanutils copy
 		profileData.setName(personaEntity.getName());
 		profileData.setBoost(personaEntity.getBoost());
 		profileData.setCash(personaEntity.getCash());

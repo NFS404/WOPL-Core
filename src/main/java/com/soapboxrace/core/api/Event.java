@@ -15,6 +15,7 @@ import com.soapboxrace.core.api.util.Secured;
 import com.soapboxrace.core.bo.AchievementsBO;
 import com.soapboxrace.core.bo.EventBO;
 import com.soapboxrace.core.bo.EventResultBO;
+import com.soapboxrace.core.bo.SocialBO;
 import com.soapboxrace.core.bo.TokenSessionBO;
 import com.soapboxrace.core.dao.AchievementDAO;
 import com.soapboxrace.core.dao.PersonaDAO;
@@ -45,6 +46,9 @@ public class Event {
 
 	@EJB
 	private PersonaDAO personaDAO;
+
+	@EJB
+	private SocialBO socialBo;
 
 	@EJB
 	private AchievementsBO achievementsBO;
@@ -81,9 +85,7 @@ public class Event {
 		switch (eventMode) {
 		case CIRCUIT:
 		case SPRINT:
-			achievementsBO.update(personaDAO.findById(activePersonaId),
-					achievementDAO.findByName("achievement_ACH_PLAY_EVENTS"),
-					1L);
+			achievementsBO.update(personaDAO.findById(activePersonaId), achievementDAO.findByName("achievement_ACH_PLAY_EVENTS"), 1L);
 			RouteArbitrationPacket routeArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, RouteArbitrationPacket.class);
 			return eventResultBO.handleRaceEnd(eventSessionEntity, activePersonaId, routeArbitrationPacket);
 		case DRAG:
@@ -93,6 +95,12 @@ public class Event {
 			break;
 		case PURSUIT_MP:
 			TeamEscapeArbitrationPacket teamEscapeArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, TeamEscapeArbitrationPacket.class);
+
+			if(teamEscapeArbitrationPacket.getCopsDeployed() >= teamEscapeArbitrationPacket.getCopsDisabled()) {
+				socialBo.sendReport(0L, activePersonaId, 3, "SilverAngel Hacks Detected.", (int) teamEscapeArbitrationPacket.getCarId(), 0,
+					teamEscapeArbitrationPacket.getHacksDetected());
+			}
+
 			return eventResultBO.handleTeamEscapeEnd(eventSessionEntity, activePersonaId, teamEscapeArbitrationPacket);
 		case PURSUIT_SP:
 			PursuitArbitrationPacket pursuitArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, PursuitArbitrationPacket.class);

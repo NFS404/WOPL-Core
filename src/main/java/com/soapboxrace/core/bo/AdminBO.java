@@ -47,6 +47,80 @@ public class AdminBO {
 	@EJB
 	private SendToAllXMPP internalXmpp;
 
+	public void sendChatCommand(Long personaId, String command)
+	{
+		CommandInfoChat commandInfo = CommandInfoChat.parse(command, true);
+		if (commandInfo == null) return;
+
+		PersonaEntity personaEntity = personaDao.findByName(commandInfo.personaName);
+		if (personaEntity == null) {
+			openFireSoapBoxCli.send(XmppChat.createSystemMessage("Cannot find the user!"), personaId);
+			return;
+		}
+
+		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ SYSTEM ].";
+		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **SYSTEM**";
+
+		switch (commandInfo.action)
+		{
+			case BAN:
+				if (banDAO.findByUser(personaEntity.getUser()) != null) {
+					openFireSoapBoxCli.send(XmppChat.createSystemMessage("User is already banned!"), personaId);
+					break;
+				}
+
+				sendBan(personaEntity, personaDao.findById(personaId), commandInfo.timeEnd, commandInfo.reason);
+				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Banned user!"), personaId);
+
+				internalXmpp.sendMessage(constructMsg.replace("%s", "banned"));
+
+				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
+					discord.sendMessage(constructMsg_ds.replace("%s", "banned"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0xff0000
+					);
+				}
+
+				break;
+			case KICK:
+				sendKick(personaEntity.getUser().getId(), personaEntity.getPersonaId());
+				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Kicked user!"), personaId);
+
+				internalXmpp.sendMessage(constructMsg.replace("%s", "kicked"));
+				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
+					discord.sendMessage(constructMsg_ds.replace("%s", "kicked"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0xfff200
+					);
+				}
+				break;
+			case UNBAN:
+				BanEntity existingBan;
+				if ((existingBan = banDAO.findByUser(personaEntity.getUser())) == null) {
+					openFireSoapBoxCli.send(XmppChat.createSystemMessage("User is not banned!"), personaId);
+					break;
+				}
+
+				internalXmpp.sendMessage(constructMsg.replace("%s", "unbanned"));
+				if(parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL") != null) {
+					discord.sendMessage(constructMsg_ds.replace("%s", "unbanned"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_URL"), 
+						parameterBO.getStrParam("DISCORD_WEBHOOK_BANREPORT_NAME", "Botte"),
+						0x1aff00
+					);
+				}
+
+				banDAO.delete(existingBan);
+				openFireSoapBoxCli.send(XmppChat.createSystemMessage("Unbanned user!"), personaId);
+
+				break;
+			default:
+				break;
+		}
+	}
+
 	public void sendCommand(Long personaId, Long abuserPersonaId, String command)
 	{
 		CommandInfo commandInfo = CommandInfo.parse(command);
@@ -142,6 +216,82 @@ public class AdminBO {
 	{
 		openFireSoapBoxCli.send("<NewsArticleTrans><ExpiryTime><", personaId);
 		tokenSessionBo.deleteByUserId(userId);
+	}
+
+	private static class CommandInfoChat
+	{
+		public CommandInfoChat.CmdAction action;
+		public String reason;
+		public LocalDateTime timeEnd;
+		public String personaName;
+
+		public enum CmdAction
+		{
+			KICK,
+			BAN,
+			UNBAN
+		}
+
+		public static CommandInfoChat parse(String cmd, boolean withName)
+		{
+			cmd = cmd.replaceFirst("/", "").trim();
+
+			String[] splits = cmd.split(" ");
+			if (splits.length == 0) return null;
+
+			CommandInfoChat.CmdAction action;
+			CommandInfoChat info = new CommandInfoChat();
+
+			switch (splits[0].toLowerCase())
+			{
+				case "ban":
+					action = CmdAction.BAN;
+					break;
+				case "kick":
+					action = CmdAction.KICK;
+					break;
+				case "unban":
+					action = CmdAction.UNBAN;
+					break;
+				default:
+					return null;
+			}
+
+			info.action = action;
+			info.personaName = splits[1];
+
+			switch (action)
+			{
+				case BAN:
+				{
+					LocalDateTime endTime;
+					String reason = null;
+
+					if (splits.length > 2)
+					{
+						long givenTime = MiscUtils.lengthToMiliseconds(splits[2]);
+						if (givenTime != 0)
+						{
+							endTime = LocalDateTime.now().plusSeconds(givenTime / 1000);
+							info.timeEnd = endTime;
+
+							if (splits.length > 3)
+							{
+								reason = MiscUtils.argsToString(splits, 3, splits.length);
+							}
+						} else
+						{
+							reason = MiscUtils.argsToString(splits, 2, splits.length);
+						}
+					}
+
+					info.reason = reason;
+					break;
+				}
+			}
+
+			return info;
+		}
 	}
 
 	private static class CommandInfo
