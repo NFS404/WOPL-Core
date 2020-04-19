@@ -45,7 +45,7 @@ public class GetFriendListFromUserId
         {
             PersonaEntity personaEntity = personaDAO.findById(friendEntity.getPersonaId());
 
-            if (personaEntity == null) continue;
+            if (personaEntity == null || personaEntity.getUser() == null) continue;
 
             FriendPersona friendPersona = new FriendPersona();
             friendPersona.setIconIndex(personaEntity.getIconIndex());

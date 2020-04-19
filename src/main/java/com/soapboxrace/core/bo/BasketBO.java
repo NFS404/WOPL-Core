@@ -281,6 +281,10 @@ public class BasketBO
 
         PersonaEntity personaEntity = personaDao.findById(personaId);
 
+        if (!carSlotEntity.getPersona().getPersonaId().equals(personaEntity.getPersonaId())) {
+            return false;
+        }
+
         final int maxCash = parameterBO.getMaxCash(securityToken);
         if (personaEntity.getCash() < maxCash)
         {
