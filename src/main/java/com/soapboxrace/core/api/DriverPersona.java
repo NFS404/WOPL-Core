@@ -22,6 +22,7 @@ import com.soapboxrace.core.bo.DriverPersonaBO;
 import com.soapboxrace.core.bo.PresenceManager;
 import com.soapboxrace.core.bo.TokenSessionBO;
 import com.soapboxrace.core.bo.UserBO;
+import com.soapboxrace.core.bo.ParameterBO;
 import com.soapboxrace.core.dao.FriendDAO;
 import com.soapboxrace.core.dao.PersonaDAO;
 import com.soapboxrace.core.jpa.FriendEntity;
@@ -45,6 +46,9 @@ public class DriverPersona
 
 	@EJB
 	private TokenSessionBO tokenSessionBo;
+
+	@EJB
+	private ParameterBO parameterBo;
 
 	@EJB
 	private PresenceManager presenceManager;
@@ -121,7 +125,7 @@ public class DriverPersona
 
 		if (persona == null)
 		{
-			return Response.status(Response.Status.FORBIDDEN).entity("Can't have more than 3 personas").build();
+			return Response.status(Response.Status.FORBIDDEN).entity("Can't have more than " + parameterBo.getIntParam("MAX_PROFILES", 3) + " personas").build();
 		}
 
 		long personaId = persona.getPersonaId();

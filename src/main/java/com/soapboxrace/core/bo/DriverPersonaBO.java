@@ -96,11 +96,17 @@ public class DriverPersonaBO {
 	
 	public ArrayOfInt getExpLevelPointsMap() {
 		ArrayOfInt arrayOfInt = new ArrayOfInt();
+
 		int rep = 0;
+		int maxLevel = parameterBO.getIntParam("MAX_LEVEL_PREMIUM");
+		int currentlevel = 1;
 		
 		for (LevelRepEntity levelRepEntity : levelRepDAO.findAll()) {
-			rep += levelRepEntity.getExpPoint().intValue();
-			arrayOfInt.getInt().add(rep);
+			if(currentlevel <= maxLevel) {
+				rep += levelRepEntity.getExpPoint().longValue();
+				arrayOfInt.getInt().add(rep);
+				currentlevel++;
+			}
 		}
 		
 		return arrayOfInt;

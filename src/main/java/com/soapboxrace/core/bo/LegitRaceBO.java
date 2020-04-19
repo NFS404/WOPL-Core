@@ -59,7 +59,12 @@ public class LegitRaceBO {
 			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d", timeDiff), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
 		}
 
-		if (arbitrationPacket.getHacksDetected() != 0 && arbitrationPacket.getHacksDetected() != 32) {
+		if (
+			arbitrationPacket.getHacksDetected() != 0 && 
+			arbitrationPacket.getHacksDetected() != 8 && 
+			arbitrationPacket.getHacksDetected() != 32 && 
+			arbitrationPacket.getHacksDetected() != 40
+		) {
 			socialBo.sendReport(0L, activePersonaId, 3, "hacksDetected = " + arbitrationPacket.getHacksDetected(), (int) arbitrationPacket.getCarId(), 0,
 					arbitrationPacket.getHacksDetected());
 		}
@@ -68,8 +73,9 @@ public class LegitRaceBO {
 			TeamEscapeArbitrationPacket teamEscapeArbitrationPacket = (TeamEscapeArbitrationPacket)arbitrationPacket;
 
 			if(teamEscapeArbitrationPacket.getFinishReason() != 8202) {
-				if(teamEscapeArbitrationPacket.getCopsDisabled() >= teamEscapeArbitrationPacket.getCopsDeployed()) {
-					socialBo.sendReport(0L, activePersonaId, 3, "[IAC] copsDisabled("+teamEscapeArbitrationPacket.getCopsDisabled()+") is higher than copsDeployed("+teamEscapeArbitrationPacket.getCopsDeployed()+")!", (int) teamEscapeArbitrationPacket.getCarId(), 0,
+				if(teamEscapeArbitrationPacket.getCopsDisabled() > teamEscapeArbitrationPacket.getCopsDeployed()) {
+					legit = false;
+					socialBo.sendReport(0L, activePersonaId, 3, "[IAC] copsDisabled is higher than copsDeployed!", (int) teamEscapeArbitrationPacket.getCarId(), 0,
 						teamEscapeArbitrationPacket.getHacksDetected());
 				}
 			}
