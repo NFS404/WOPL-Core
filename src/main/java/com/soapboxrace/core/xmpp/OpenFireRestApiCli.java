@@ -1,9 +1,7 @@
 package com.soapboxrace.core.xmpp;
 
 import com.soapboxrace.core.bo.ParameterBO;
-import com.soapboxrace.core.dao.TokenSessionDAO;
-
-import org.igniterealtime.restclient.entity.*;
+import com.soapboxrace.core.bo.util.DiscordWebhook;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -15,12 +13,10 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.soapboxrace.core.bo.util.DiscordWebhook;
 
 @Startup
 @Singleton
@@ -28,13 +24,12 @@ public class OpenFireRestApiCli
 {
 	private String openFireToken;
 	private String openFireAddress;
+	private String domain;
 	private boolean restApiEnabled = false;
+	private Client client;
 
 	@EJB
 	private ParameterBO parameterBO;
-
-	@EJB
-	private TokenSessionDAO tokenDAO;
 
 	@EJB
 	private DiscordWebhook discord;
@@ -44,23 +39,22 @@ public class OpenFireRestApiCli
 	{
 		openFireToken = parameterBO.getStrParam("OPENFIRE_TOKEN");
 		openFireAddress = parameterBO.getStrParam("OPENFIRE_ADDRESS");
+		domain = parameterBO.getStrParam("XMPP_IP");
 		if (openFireToken != null && openFireAddress != null)
 		{
 			restApiEnabled = true;
+			client = ClientBuilder.newClient();
 		}
-		createUpdatePersona("sbrw.engine.engine", openFireToken);
-
-		discord.sendMessage("Server is now up and running!", 0x00ff00);
+        discord.sendMessage("Server is now up and running!", 0x00ff00);
 	}
 
-	@PreDestroy
+    @PreDestroy
 	public void terminate() {
 		discord.sendMessage("i am literally about to crash!", 0xff0000);
 	}
 
 	private Builder getBuilder(String path)
 	{
-		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target(openFireAddress).path(path);
 		Builder request = target.request(MediaType.APPLICATION_XML);
 		request.header("Authorization", openFireToken);
@@ -73,23 +67,14 @@ public class OpenFireRestApiCli
 		{
 			return;
 		}
-		Builder builder = getBuilder("users/" + user);
-		Response response = builder.get();
-		if (response.getStatus() == 200)
-		{
-			response.close();
-			UserEntity userEntity = builder.get(UserEntity.class);
-			userEntity.setPassword(password);
-			builder = getBuilder("users/" + user);
-			builder.put(Entity.entity(userEntity, MediaType.APPLICATION_XML));
-		} else
-		{
-			response.close();
-			builder = getBuilder("users");
-			UserEntity userEntity = new UserEntity(user, null, null, password);
-			builder.post(Entity.entity(userEntity, MediaType.APPLICATION_XML));
-		}
-		response.close();
+		Builder builder = getBuilder("users");
+		UserEntity userEntity = new UserEntity(user, password);
+		builder.post(Entity.entity(userEntity, MediaType.APPLICATION_JSON)).close();
+	}
+
+	private void deletePersona(String user) {
+		Builder builder = getBuilder("users/"+user);
+		builder.delete().close();
 	}
 
 	public void createUpdatePersona(Long personaId, String password)
@@ -98,8 +83,23 @@ public class OpenFireRestApiCli
 		createUpdatePersona(user, password);
 	}
 
-	public int getTotalOnlineUsers() {
-		return tokenDAO.getUsersOnlineCount();
+	public int getTotalOnlineUsers()
+	{
+		if (!restApiEnabled)
+		{
+			return 0;
+		}
+		return getSessions().size();
+	}
+
+	private List<String> getSessions() {
+		Builder builder = getBuilder("sessions");
+		return builder.get(new GenericType<List<String>>() {});
+	}
+
+	public List<RoomEntity> getAllRooms() {
+		Builder builder = getBuilder("rooms");
+		return builder.get(new GenericType<List<RoomEntity>>() {});
 	}
 
 	public List<Long> getAllPersonaByGroup(Long personaId)
@@ -108,15 +108,13 @@ public class OpenFireRestApiCli
 		{
 			return new ArrayList<>();
 		}
-		Builder builder = getBuilder("chatrooms");
-		MUCRoomEntities roomEntities = builder.get(MUCRoomEntities.class);
-		List<MUCRoomEntity> listRoomEntity = roomEntities.getMucRooms();
-		for (MUCRoomEntity entity : listRoomEntity)
+		List<RoomEntity> roomEntities = getAllRooms();
+		for (RoomEntity entity : roomEntities)
 		{
-			String roomName = entity.getRoomName();
-			if (roomName.contains("group.channel."))
+			String roomName = entity.getName();
+			if (roomName.startsWith("group.channel."))
 			{
-				List<Long> groupMembers = getAllOccupantsInRoom(roomName);
+				List<Long> groupMembers = namesToPersonas(entity.getMembers());
 				if (groupMembers.contains(personaId)) {
 					return groupMembers;
 				}
@@ -125,41 +123,33 @@ public class OpenFireRestApiCli
 		return new ArrayList<>();
 	}
 
-	public List<Long> getAllOccupantsInRoom(String roomName)
-	{
-		Builder builder = getBuilder("chatrooms/" + roomName + "/occupants");
-		OccupantEntities occupantEntities = builder.get(OccupantEntities.class);
-		List<Long> listOfPersona = new ArrayList<Long>();
-		if (occupantEntities.getOccupants() != null) {
-			for (OccupantEntity entity : occupantEntities.getOccupants()) {
-				String jid = entity.getJid();
-				try {
-					Long personaId = Long.parseLong(jid.substring(jid.lastIndexOf('.') + 1));
-					listOfPersona.add(personaId);
-				} catch (Exception e) {
-					//
-				}
-			}
-		}
-		return listOfPersona;
-	}
-
-	public List<MUCRoomEntity> getAllRooms() {
-		Builder builder = getBuilder("chatrooms");
-		MUCRoomEntities roomEntities = builder.get(MUCRoomEntities.class);
-
-		return roomEntities.getMucRooms();
-	}
-
 	public List<Long> getOnlinePersonas() {
-		Builder builder = getBuilder("sessions");
-		SessionEntities entities = builder.get(SessionEntities.class);
+		List<String> entities = getSessions();
+		if (entities != null) {
+			return namesToPersonas(entities);
+		}
+		return new ArrayList<>();
+	}
+
+	public void sendMessage(Long to, String message) {
+		sendMessage("sbrw." + to, message);
+	}
+
+	public void sendMessage(String to, String message) {
+		Builder builder = getBuilder("users/" + to + "/message");
+		MessageEntity entity = new MessageEntity();
+		entity.setBody(message);
+		entity.setFrom("sbrw.engine.engine@" + domain + "/EA_Chat");
+		entity.calculateHash(to + "@" + domain);
+		builder.post(Entity.json(entity)).close();
+	}
+
+	private List<Long> namesToPersonas(List<String> names) {
 		List<Long> personaList = new ArrayList<>();
 
-		for (SessionEntity entity : entities.getSessions()) {
-			String user = entity.getUsername();
+		for (String name : names) {
 			try {
-				Long personaId = Long.parseLong(user.substring(user.lastIndexOf('.') + 1));
+				Long personaId = Long.parseLong(name.substring(name.lastIndexOf('.') + 1));
 				personaList.add(personaId);
 			} catch (Exception e) {
 				//

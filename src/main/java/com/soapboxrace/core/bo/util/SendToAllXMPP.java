@@ -5,8 +5,8 @@ import javax.ejb.Stateless;
 
 import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
 import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
+import com.soapboxrace.core.xmpp.RoomEntity;
 import com.soapboxrace.core.xmpp.XmppChat;
-import org.igniterealtime.restclient.entity.MUCRoomEntity;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,16 +19,16 @@ public class SendToAllXMPP {
     private OpenFireSoapBoxCli openFireSoapBoxCli;
 
 	public void sendMessageToChannel(String message, String channelname) {
-		List<MUCRoomEntity> channels = restApiCli.getAllRooms()
+		List<RoomEntity> channels = restApiCli.getAllRooms()
 			.stream()
 			.collect(Collectors.toList());
 
         String msg = XmppChat.createSystemMessage(message);
 
-        for (MUCRoomEntity channel : channels) {
-        	System.out.println(channel.getRoomName());
-        	if(channel.getRoomName().equals(channelname)) {
-	            List<Long> members = restApiCli.getAllOccupantsInRoom(channel.getRoomName());
+        for (RoomEntity channel : channels) {
+        	System.out.println(channel.getName());
+        	if(channel.getName().equals(channelname)) {
+	            List<Long> members = restApiCli.getOnlinePersonas();
 	                
 	            for (Long member : members) {
 	                openFireSoapBoxCli.send(msg, member);
@@ -38,18 +38,14 @@ public class SendToAllXMPP {
 	}
 
 	public void sendMessage(String message) {
-		List<MUCRoomEntity> channels = restApiCli.getAllRooms()
-			.stream()
-			.collect(Collectors.toList());
+		List<RoomEntity> channels = restApiCli.getAllRooms();
 
         String msg = XmppChat.createSystemMessage(message);
 
-        for (MUCRoomEntity channel : channels) {
-            List<Long> members = restApiCli.getAllOccupantsInRoom(channel.getRoomName());
+        List<Long> members = restApiCli.getOnlinePersonas();
                 
-            for (Long member : members) {
-                openFireSoapBoxCli.send(msg, member);
-            }
-   	    }
+        for (Long member : members) {
+            openFireSoapBoxCli.send(msg, member);
+        }
    	}
 }

@@ -1,41 +1,22 @@
 package com.soapboxrace.core.bo;
 
-import java.nio.ByteBuffer;
-import java.time.LocalDateTime;
-import java.util.*;
+import com.soapboxrace.core.dao.*;
+import com.soapboxrace.core.jpa.*;
+import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
+import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
+import com.soapboxrace.core.xmpp.XmppChat;
+import com.soapboxrace.core.xmpp.XmppLobby;
+import com.soapboxrace.jaxb.http.*;
+import com.soapboxrace.jaxb.xmpp.*;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-
-import com.soapboxrace.core.dao.EventDAO;
-import com.soapboxrace.core.dao.EventSessionDAO;
-import com.soapboxrace.core.dao.LobbyDAO;
-import com.soapboxrace.core.dao.LobbyEntrantDAO;
-import com.soapboxrace.core.dao.PersonaDAO;
-import com.soapboxrace.core.dao.TokenSessionDAO;
-import com.soapboxrace.core.jpa.EventEntity;
-import com.soapboxrace.core.jpa.EventSessionEntity;
-import com.soapboxrace.core.jpa.LobbyEntity;
-import com.soapboxrace.core.jpa.LobbyEntrantEntity;
-import com.soapboxrace.core.jpa.PersonaEntity;
-import com.soapboxrace.core.jpa.TokenSessionEntity;
-import com.soapboxrace.core.xmpp.OpenFireRestApiCli;
-import com.soapboxrace.core.xmpp.OpenFireSoapBoxCli;
-import com.soapboxrace.core.xmpp.XmppLobby;
-import com.soapboxrace.jaxb.http.ArrayOfLobbyEntrantInfo;
-import com.soapboxrace.jaxb.http.Entrants;
-import com.soapboxrace.jaxb.http.LobbyCountdown;
-import com.soapboxrace.jaxb.http.LobbyEntrantAdded;
-import com.soapboxrace.jaxb.http.LobbyEntrantInfo;
-import com.soapboxrace.jaxb.http.LobbyEntrantRemoved;
-import com.soapboxrace.jaxb.http.LobbyEntrantState;
-import com.soapboxrace.jaxb.http.LobbyInfo;
-import com.soapboxrace.jaxb.xmpp.ChallengeType;
-import com.soapboxrace.jaxb.xmpp.XMPP_CryptoTicketsType;
-import com.soapboxrace.jaxb.xmpp.XMPP_EventSessionType;
-import com.soapboxrace.jaxb.xmpp.XMPP_LobbyInviteType;
-import com.soapboxrace.jaxb.xmpp.XMPP_LobbyLaunchedType;
-import com.soapboxrace.jaxb.xmpp.XMPP_P2PCryptoTicketType;
+import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 @Stateless
 public class LobbyBO {
@@ -88,6 +69,14 @@ public class LobbyBO {
 			createLobby(personaEntity, eventId, eventEntity.getCarClassHash(), false);
 		} else {
 			joinLobby(personaEntity, lobbys);
+		}
+	}
+
+	public void sendAnnouncement(PersonaEntity personaEntity, EventEntity eventEntity) {
+		String message = XmppChat.createSystemMessage(personaEntity.getName() + " is looking for racers on " + eventEntity.getName());
+		List<Long> sessions = openFireRestApiCli.getOnlinePersonas();
+		for (Long member : sessions) {
+			openFireRestApiCli.sendMessage(member, message);
 		}
 	}
 
@@ -209,6 +198,11 @@ public class LobbyBO {
 	public LobbyInfo acceptinvite(Long personaId, Long lobbyInviteId) {
 		LobbyEntity lobbyEntity = lobbyDao.findById(lobbyInviteId);
 		int eventId = lobbyEntity.getEvent().getId();
+
+		if (lobbyEntity.getPersonaId().equals(personaId) && !lobbyEntity.getIsPrivate()) {
+			PersonaEntity personaEntity = personaDao.findById(personaId);
+			sendAnnouncement(personaEntity, lobbyEntity.getEvent());
+		}
 
 		LobbyCountdown lobbyCountdown = new LobbyCountdown();
 		lobbyCountdown.setLobbyId(lobbyInviteId);
