@@ -10,9 +10,6 @@ public class OccupantEntity {
     private String role;
 	private String affiliation;
 
-	public OccupantEntity() {
-	}
-
 	@XmlElement
 	public String getJid() {
 		return jid;

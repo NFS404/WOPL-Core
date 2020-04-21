@@ -176,10 +176,10 @@ public class TokenSessionBO {
 						userEntity.setDiscordId(httpRequest.getHeader("X-DiscordID"));
 
 						if(httpRequest.getHeader("X-UserAgent") == null) {
-							System.out.println("1" + httpRequest.getHeader("X-User-Agent"));
+							System.out.println(email + " Logged in! (" + httpRequest.getHeader("X-User-Agent") + ")");
 							userEntity.setUA(httpRequest.getHeader("X-User-Agent"));
 						} else {
-							System.out.println("2" + httpRequest.getHeader("X-UserAgent"));
+							System.out.println(email + " Logged in! (" + httpRequest.getHeader("X-UserAgent") + ")");
 							userEntity.setUA(httpRequest.getHeader("X-UserAgent"));
 						}
 
@@ -212,6 +212,8 @@ public class TokenSessionBO {
 	public void setActivePersonaId(String securityToken, Long personaId, Boolean isLogout) {
 		TokenSessionEntity tokenSessionEntity = tokenDAO.findById(securityToken);
 
+		System.out.println("FOUND TOKEN BY ID: " + securityToken);
+
 		if (!isLogout) {
 			if (!userDAO.findById(tokenSessionEntity.getUserId()).ownsPersona(personaId)) {
 				throw new NotAuthorizedException("Persona not owned by user");
@@ -219,6 +221,7 @@ public class TokenSessionBO {
 		}
 
 		tokenSessionEntity.setActivePersonaId(personaId);
+		System.out.println("SET ACTIVE PERSONA ID: " + personaId);
 		tokenSessionEntity.setIsLoggedIn(!isLogout);
 		tokenDAO.update(tokenSessionEntity);
 	}
