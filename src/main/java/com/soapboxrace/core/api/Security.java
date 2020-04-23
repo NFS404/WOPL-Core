@@ -18,13 +18,13 @@ public class Security {
 	@Path("/fraudConfig")
 	@Produces(MediaType.APPLICATION_XML)
 	public FraudConfig fraudConfig(@HeaderParam("userId") Long userId) {
-		FraudConfig fraudConfig = new FraudConfig();
-		fraudConfig.setEnabledBitField(12);
-		fraudConfig.setGameFileFreq(-1);
-		fraudConfig.setModuleFreq(360000);
-		fraudConfig.setStartUpFreq(1000000);
-		fraudConfig.setUserID(userId);
-		return fraudConfig;
+        FraudConfig fraudConfig = new FraudConfig();
+        fraudConfig.setEnabledBitField(0);
+        fraudConfig.setGameFileFreq(2147483647);
+        fraudConfig.setModuleFreq(2147483647);
+        fraudConfig.setStartUpFreq(2147483647);
+        fraudConfig.setUserID(userId);
+        return fraudConfig;
 	}
 
 	@POST
