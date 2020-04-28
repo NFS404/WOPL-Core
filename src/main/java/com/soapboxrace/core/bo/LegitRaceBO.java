@@ -62,7 +62,7 @@ public class LegitRaceBO {
 		String eventName = eventNameFull.split("\\(")[0];
 
 		if (!legit) {
-			socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d in %s", timeDiff, eventName), (int) arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
+            socialBo.sendReport(0L, activePersonaId, 3, String.format("Abnormal event time: %d (below minimum of %d on %w)", timeDiff, minimumTime, eventName), (int)arbitrationPacket.getCarId(), 0, arbitrationPacket.getHacksDetected());
 		}
 
 		if (arbitrationPacket.getHacksDetected() != 0 && arbitrationPacket.getHacksDetected() != 8 && arbitrationPacket.getHacksDetected() != 32 && arbitrationPacket.getHacksDetected() != 40) {

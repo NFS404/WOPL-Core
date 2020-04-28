@@ -58,8 +58,8 @@ public class AdminBO {
 			return;
 		}
 
-		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ SYSTEM ].";
-		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **SYSTEM**";
+		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ DISCORD ].";
+		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **DISCORD**";
 
 		switch (commandInfo.action)
 		{
