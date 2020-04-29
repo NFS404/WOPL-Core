@@ -128,6 +128,10 @@ public class PersonaBO {
 		return OwnedCarConverter.entity2Trans(carSlotEntity.getOwnedCar());
 	}
 
+	public List<CarSlotEntity> getPersonasCar(Long personaId) {
+		return carSlotDAO.findByPersonaId(personaId);
+	}
+
 	public LevelRepEntity getLevelInfoByLevel(Long level) {
 		return levelRepDAO.findByLevel(level);
 	}

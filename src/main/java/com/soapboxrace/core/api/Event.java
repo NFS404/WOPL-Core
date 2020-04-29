@@ -87,18 +87,21 @@ public class Event {
 		case SPRINT:
 			achievementsBO.update(personaDAO.findById(activePersonaId), achievementDAO.findByName("achievement_ACH_PLAY_EVENTS"), 1L);
 			RouteArbitrationPacket routeArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, RouteArbitrationPacket.class);
+			routeArbitrationPacket.setHacksDetected(routeArbitrationPacket.getHacksDetected() & ~32);
 			return eventResultBO.handleRaceEnd(eventSessionEntity, activePersonaId, routeArbitrationPacket);
 		case DRAG:
 			DragArbitrationPacket dragArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, DragArbitrationPacket.class);
+			dragArbitrationPacket.setHacksDetected(dragArbitrationPacket.getHacksDetected() & ~32);
 			return eventResultBO.handleDragEnd(eventSessionEntity, activePersonaId, dragArbitrationPacket);
 		case MEETINGPLACE:
 			break;
 		case PURSUIT_MP:
 			TeamEscapeArbitrationPacket teamEscapeArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, TeamEscapeArbitrationPacket.class);
-
+			teamEscapeArbitrationPacket.setHacksDetected(teamEscapeArbitrationPacket.getHacksDetected() & ~32);
 			return eventResultBO.handleTeamEscapeEnd(eventSessionEntity, activePersonaId, teamEscapeArbitrationPacket);
 		case PURSUIT_SP:
 			PursuitArbitrationPacket pursuitArbitrationPacket = UnmarshalXML.unMarshal(arbitrationXml, PursuitArbitrationPacket.class);
+			pursuitArbitrationPacket.setHacksDetected(pursuitArbitrationPacket.getHacksDetected() & ~32);
 			return eventResultBO.handlePursitEnd(eventSessionEntity, activePersonaId, pursuitArbitrationPacket, false);
 		default:
 			break;

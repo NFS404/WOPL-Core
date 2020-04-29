@@ -47,9 +47,6 @@ public class BasketBO
     private ProductDAO productDao;
 
     @EJB
-    private PersonaDAO personaDao;
-
-    @EJB
     private TokenSessionBO tokenSessionBO;
 
     @EJB
@@ -63,6 +60,9 @@ public class BasketBO
 
     @EJB
     private AchievementDAO achievementDAO;
+
+    @EJB
+    private PersonaDAO personaDAO;
 
     @EJB
     private AchievementsBO achievementsBO;
@@ -93,7 +93,7 @@ public class BasketBO
         {
             personaEntity.setCash(personaEntity.getCash() - price);
         }
-        personaDao.update(personaEntity);
+        personaDAO.update(personaEntity);
 
         defaultCarEntity.getOwnedCar().setDurability(100);
 
@@ -102,7 +102,7 @@ public class BasketBO
     }
 
     public CommerceResultStatus restoreTreasureHunt(PersonaEntity personaEntity) {
-        int price = parameterBO.getIntParam("TH_REVIVE_PRICE", 250000);
+        int price = parameterBO.getIntParam("THREVIVE_PRICE", 250000);
 
         if(personaEntity.getCash() < price) {
             return CommerceResultStatus.FAIL_LOCKED_PRODUCT_NOT_ACCESSIBLE_TO_THIS_USER;
@@ -171,15 +171,14 @@ public class BasketBO
         if (upgradedAmount)
         {
             personaEntity.setCash(personaEntity.getCash() - powerupProduct.getPrice());
-            personaDao.update(personaEntity);
+            personaDAO.update(personaEntity);
         }
 
         return CommerceResultStatus.SUCCESS;
     }
 
     public CommerceResultStatus buyCar(String productId, PersonaEntity personaEntity, String securityToken) {
-        int carCount = carSlotDAO.countByPersonaId(personaEntity.getPersonaId());
-        if (carCount >= parameterBO.getCarLimit(securityToken)) {
+        if (getPersonaCarCount(personaEntity.getPersonaId()) >= parameterBO.getCarLimit(securityToken)) {
             return CommerceResultStatus.FAIL_INSUFFICIENT_CAR_SLOTS;
         }
 
@@ -203,7 +202,7 @@ public class BasketBO
 
             CarSlotEntity carSlotEntity = addCar(productId, personaEntity);
 
-            personaDao.update(personaEntity);
+            personaDAO.update(personaEntity);
             personaBo.changeDefaultCar(personaEntity.getPersonaId(), carSlotEntity.getOwnedCar().getId());
             return CommerceResultStatus.SUCCESS;
         } else {
@@ -212,7 +211,8 @@ public class BasketBO
     }
 
     public CarSlotEntity addCar(String productId, PersonaEntity personaEntity)
-    {    
+    {
+        ProductEntity productEntity = productDao.findByProductId(productId);
         OwnedCarTrans ownedCarTrans = getCar(productId);
         ownedCarTrans.setId(0L);
         ownedCarTrans.getCustomCar().setId(0);
@@ -235,7 +235,6 @@ public class BasketBO
 
         if (brand != null) {
             AchievementDefinitionEntity achievement = achievementDAO.findByName("achievement_ACH_OWN_" + brand);
-
             if (achievement != null) {
                 achievementsBO.update(personaEntity, achievement, 1L);
             }
@@ -244,9 +243,14 @@ public class BasketBO
         return carSlotEntity;
     }
 
+    public int getPersonaCarCount(Long personaId)
+    {
+        return getPersonasCar(personaId).size();
+    }
+
     public List<CarSlotEntity> getPersonasCar(Long personaId)
     {
-        List<CarSlotEntity> findByPersonaId = carSlotDAO.findByPersonaIdEager(personaId);
+        List<CarSlotEntity> findByPersonaId = carSlotDAO.findByPersonaId(personaId);
         for (CarSlotEntity carSlotEntity : findByPersonaId)
         {
             CustomCarEntity customCar = carSlotEntity.getOwnedCar().getCustomCar();
@@ -273,13 +277,13 @@ public class BasketBO
         {
             return false;
         }
-        int personaCarCount = carSlotDAO.countByPersonaId(personaId);
+        int personaCarCount = getPersonaCarCount(personaId);
         if (personaCarCount <= 1)
         {
             return false;
         }
 
-        PersonaEntity personaEntity = personaDao.findById(personaId);
+        PersonaEntity personaEntity = personaDAO.findById(personaId);
 
         if (!carSlotEntity.getPersona().getPersonaId().equals(personaEntity.getPersonaId())) {
             return false;
@@ -303,7 +307,7 @@ public class BasketBO
             curCarIndex = 0;
         } else
         {
-            List<CarSlotEntity> personasCar = carSlotDAO.findByPersonaId(personaId);
+            List<CarSlotEntity> personasCar = personaBo.getPersonasCar(personaId);
             int curCarIndexTmp = curCarIndex;
             for (int i = 0; i < curCarIndexTmp; i++)
             {
@@ -316,7 +320,7 @@ public class BasketBO
         }
         carSlotDAO.delete(carSlotEntity);
         personaEntity.setCurCarIndex(curCarIndex);
-        personaDao.update(personaEntity);
+        personaDAO.update(personaEntity);
         return true;
     }
 

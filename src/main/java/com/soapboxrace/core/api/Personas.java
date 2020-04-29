@@ -47,6 +47,13 @@ import com.soapboxrace.jaxb.http.WalletTrans;
 import com.soapboxrace.jaxb.util.MarshalXML;
 import com.soapboxrace.jaxb.util.UnmarshalXML;
 
+import com.soapboxrace.jaxb.http.ArrayOfCustomPaintTrans;
+import com.soapboxrace.jaxb.http.ArrayOfCustomVinylTrans;
+import com.soapboxrace.jaxb.http.ArrayOfPerformancePartTrans;
+import com.soapboxrace.jaxb.http.ArrayOfSkillModPartTrans;
+import com.soapboxrace.jaxb.http.ArrayOfVisualPartTrans;
+import com.soapboxrace.jaxb.http.CustomCarTrans;
+
 @Path("/personas")
 public class Personas {
 
@@ -102,6 +109,17 @@ public class Personas {
 		boostWallet.setBalance(personaEntity.getBoost());
 		boostWallet.setCurrency("BOOST"); // 12/30/18: why doesn't _NS work? Truly a mystery...
 
+		if (parameterBO.getBoolParam("CARCHANGER_PROTECTION")) {
+			CustomCarTrans customCar = commerceSessionTrans.getUpdatedCar().getCustomCar();
+			if (!customCar.getPerformanceParts().getPerformancePartTrans().isEmpty()) {
+				customCar.setPerformanceParts(new ArrayOfPerformancePartTrans());
+				customCar.setVinyls(new ArrayOfCustomVinylTrans());
+				customCar.setSkillModParts(new ArrayOfSkillModPartTrans());
+				customCar.setPaints(new ArrayOfCustomPaintTrans());
+				customCar.setVisualParts(new ArrayOfVisualPartTrans());
+			}
+		}
+
 		ArrayOfWalletTrans arrayOfWalletTrans = new ArrayOfWalletTrans();
 		arrayOfWalletTrans.getWalletTrans().add(cashWallet);
 		arrayOfWalletTrans.getWalletTrans().add(boostWallet);
@@ -134,7 +152,11 @@ public class Personas {
 		
 		BasketTrans basketTrans = UnmarshalXML.unMarshal(basketXml, BasketTrans.class);
 		String productId = basketTrans.getItems().getBasketItemTrans().get(0).getProductId();
-		if ("-1".equals(productId) || "SRV-GARAGESLOT".equals(productId)) {
+		
+		int carLimit = parameterBO.getCarLimit(securityToken);
+		if (basketBO.getPersonaCarCount(personaId) >= carLimit) {
+			commerceResultTrans.setStatus(CommerceResultStatus.FAIL_INSUFFICIENT_CAR_SLOTS);
+		} else if ("-1".equals(productId) || "SRV-GARAGESLOT".equals(productId)) {
 			commerceResultTrans.setStatus(CommerceResultStatus.FAIL_INSUFFICIENT_FUNDS);
 		} else if (productId.equals("SRV-THREVIVE")) {
 			commerceResultTrans.setStatus(basketBO.restoreTreasureHunt(personaEntity));

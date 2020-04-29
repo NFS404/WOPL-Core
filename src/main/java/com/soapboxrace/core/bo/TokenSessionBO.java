@@ -187,7 +187,7 @@ public class TokenSessionBO {
 
 						Long userId = userEntity.getId();
 						deleteByUserId(userId);
-						String randomUUID = createToken(userId, null);
+						String randomUUID = createToken(userId, httpRequest.getRemoteHost());
 						loginStatusVO = new LoginStatusVO(userId, randomUUID, true);
 						loginStatusVO.setDescription("");
 
