@@ -38,7 +38,7 @@ public class SystemInfo {
 		String portalDomain = parameterBO.getStrParam("PORTAL_DOMAIN", "soapboxrace.world");
         systemInfo.setPortalStoreFailurePage(portalDomain + "/fail");
         systemInfo.setPortalTimeOut("6000");
-        systemInfo.setShardName("Core");
+        systemInfo.setShardName("CORE");
         GregorianCalendar c = new GregorianCalendar();
         try {
             XMLGregorianCalendar date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);

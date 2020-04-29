@@ -169,14 +169,13 @@ public class User
 	@Secured
 	@Path("SecureLogout")
 	@Produces(MediaType.APPLICATION_XML)
-	public String secureLogout(@HeaderParam("securityToken") String securityToken)
+	public String secureLogout(@HeaderParam("userId") Long userId, @HeaderParam("securityToken") String securityToken) 
 	{
 		Long activePersonaId = tokenBO.getActivePersonaId(securityToken);
 
-		if (Objects.isNull(activePersonaId) || activePersonaId == 0L)
-		{
-			return "";
-		}
+        if (!Objects.isNull(activePersonaId) && !activePersonaId.equals(0L)) {
+            tokenBO.setActivePersonaId(securityToken, 0L, true);
+        }
 
 		PersonaEntity personaEntity = personaDAO.findById(activePersonaId);
 		tokenBO.setActivePersonaId(securityToken, 0L, true);

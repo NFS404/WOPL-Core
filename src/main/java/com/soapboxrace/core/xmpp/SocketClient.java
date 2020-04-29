@@ -6,73 +6,62 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class SocketClient
-{
+public class SocketClient {
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
 
-    public SocketClient(String srvAddress, int port)
-    {
+    public SocketClient(String srvAddress, int port) {
         int tries = 0;
-        while (true)
-        {
-            if (tries >= 20)
-            {
+        while (true) {
+            if (tries >= 20) {
                 System.err.println("Failed to connect to XMPP host");
                 System.exit(1);
                 break;
             }
 
-            try
-            {
+            try {
                 tries++;
-                System.out.println("Attempting to connect to OpenFire XMPP Host. Attempt #" + String.valueOf(tries));
+                System.out.println("Attempting to connect to OpenFire XMPP Host. Attempt #" + tries);
                 socket = new Socket(srvAddress, port);
                 out = new PrintWriter(this.socket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 System.out.println("Connected to OpenFire XMPP Host...");
                 break;
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 System.out.println("Failed, retrying.");
-                try
-                {
+                try {
                     Thread.sleep(1000);
-                } catch (InterruptedException j)
-                {
+                } catch (InterruptedException j) {
                     j.printStackTrace();
                 }
             }
         }
     }
 
-    public void send(String command)
-    {
-        System.out.println("C->S [" + command + "]");
+    public void send(String command) {
+//        System.out.println("C->S [" + command + "]");
         out.println(command);
         out.flush();
     }
 
-    public String receive()
-    {
-        String receive = "";
-        try
-        {
-            char[] cbuf = new char[10240];
-            in.read(cbuf);
-            receive = new String(cbuf);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
+    public String receive() {
+        try {
+            char[] buf = new char[16384];
+            int n = in.read(buf);
+
+            if (n == -1) {
+                throw new RuntimeException("EOF on XMPP stream");
+            }
+
+            return new String(buf);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read from XMPP stream", e);
         }
-        System.out.println("S->C [" + receive + "]");
-        return receive;
     }
 
-    public Socket getSocket()
-    {
+    public Socket getSocket() {
         return socket;
     }
 
