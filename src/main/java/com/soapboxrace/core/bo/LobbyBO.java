@@ -84,7 +84,7 @@ public class LobbyBO {
 		PersonaEntity personaEntity = personaDao.findById(personaId);
 		EventEntity eventEntity = eventDao.findById(eventId);
 		List<LobbyEntity> lobbys = lobbyDao.findByEventStarted(eventId);
-		if (lobbys.size() == 0) {
+		if (lobbys.isEmpty()) {
 			createLobby(personaEntity, eventId, eventEntity.getCarClassHash(), false);
 		} else {
 			joinLobby(personaEntity, lobbys);
@@ -380,16 +380,16 @@ public class LobbyBO {
 
 				lobbyEntrantInfo.add(lobbyEntrantInfoType);
 			}
-			XMPP_EventSessionType xMPP_EventSessionType = new XMPP_EventSessionType();
+			XMPP_EventSessionType xmppEventSessionType = new XMPP_EventSessionType();
 			ChallengeType challengeType = new ChallengeType();
 			challengeType.setChallengeId("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 			challengeType.setPattern("FFFFFFFFFFFFFFFF");
 			challengeType.setLeftSize(14);
 			challengeType.setRightSize(50);
 
-			xMPP_EventSessionType.setEventId(lobbyEntity.getEvent().getId());
-			xMPP_EventSessionType.setChallenge(challengeType);
-			xMPP_EventSessionType.setSessionId(eventDataEntity.getId());
+			xmppEventSessionType.setEventId(lobbyEntity.getEvent().getId());
+			xmppEventSessionType.setChallenge(challengeType);
+			xmppEventSessionType.setSessionId(eventDataEntity.getId());
 			lobbyLaunched.setNewRelayServer(true);
 			lobbyLaunched.setLobbyId(lobbyEntity.getId());
 			lobbyLaunched.setUdpRelayHost(udpRaceIp);
@@ -397,7 +397,7 @@ public class LobbyBO {
 
 			lobbyLaunched.setEntrants(entrantsType);
 
-			lobbyLaunched.setEventSession(xMPP_EventSessionType);
+			lobbyLaunched.setEventSession(xmppEventSessionType);
 
 			XmppLobby xmppLobby = new XmppLobby(0L, openFireSoapBoxCli);
 			xmppLobby.sendRelay(lobbyLaunched, xMPP_CryptoTicketsType);
