@@ -47,7 +47,11 @@ public class AdminBO {
 	@EJB
 	private SendToAllXMPP internalXmpp;
 
-	public void sendChatCommand(Long personaId, String command)
+	public void sendChatCommand(Long personaId, String command) {
+		sendChatCommand(personaId, command, "DISCORD");
+	}
+
+	public void sendChatCommand(Long personaId, String command, String bywho)
 	{
 		CommandInfoChat commandInfo = CommandInfoChat.parse(command, true);
 		if (commandInfo == null) return;
@@ -58,8 +62,8 @@ public class AdminBO {
 			return;
 		}
 
-		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ DISCORD ].";
-		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **DISCORD**";
+		String constructMsg = "[ " + personaEntity.getName() + " ] has been %s by [ " + bywho + " ].";
+		String constructMsg_ds = "**" + personaEntity.getName() + "** has been %s by **" + bywho + "**";
 
 		switch (commandInfo.action)
 		{

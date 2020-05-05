@@ -33,7 +33,7 @@ public class OpenfireHook {
         }
         PersonaEntity personaEntity = personaDAO.findById(persona);
         if (personaEntity != null && personaEntity.getUser().isAdmin()) {
-            adminBO.sendChatCommand(persona, command);
+            adminBO.sendChatCommand(persona, command, personaEntity.getName());
         }
         return Response.noContent().build();
     }
